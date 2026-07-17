@@ -67,9 +67,11 @@
     <h2>Data Transfer</h2>
     <p>Paste JSON from another system or upload a JSON file to load values into this estimator.</p>
     <div class="grid">
+      <label for="transferData">Transfer JSON</label>
       <textarea id="transferData" placeholder='{"projectName":"Front Fence","linearFeet":150}'></textarea>
       <div class="row">
         <button id="importBtn" class="secondary" type="button">Import Data</button>
+        <label for="fileInput">Upload JSON file</label>
         <input id="fileInput" type="file" accept="application/json" />
       </div>
       <div id="status" class="status"></div>
@@ -131,6 +133,7 @@
         .replace(/[/\\]/g, '-')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
+        // Avoid hidden-file style names that begin with dots.
         .replace(/^\.+/, '')
         .replace(/^-+|-+$/g, '');
       return sanitized || fallback;
@@ -151,6 +154,7 @@
 
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
+      // n fence sections require n+1 posts, so we add one starting post for non-zero runs.
       const linePostCount = input.linearFeet > 0 ? Math.floor(input.linearFeet / POST_SPACING_FEET) + 1 : 0;
       // Assumes one extra reinforcement post per corner/small gate and two per large gate.
       const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
@@ -247,7 +251,7 @@
       a.href = url;
       a.download = `${projectName}.json`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 100);
       setStatus('Estimate JSON download started. If downloads are blocked, use Copy Estimate JSON.');
     }
 
