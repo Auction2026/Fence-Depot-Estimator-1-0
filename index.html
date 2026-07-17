@@ -128,8 +128,10 @@
 
     function sanitizeFilename(name, fallback = 'fence-estimate') {
       const sanitized = (name || fallback)
+        .replace(/[\\/]/g, '-')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^\.+/, '')
         .replace(/^-+|-+$/g, '');
       return sanitized || fallback;
     }
@@ -150,7 +152,7 @@
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
       const linePostCount = Math.ceil(input.linearFeet / POST_SPACING_FEET);
-      // Each corner and small gate needs one additional post; each large gate needs two.
+      // Base spacing assumes straight runs; corners and gates add reinforcement posts.
       const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
       const lines = [
         { item: 'Fence Materials', qty: input.linearFeet, unit: pricing.materialPerFoot, total: input.linearFeet * pricing.materialPerFoot },
@@ -220,11 +222,15 @@
         setStatus('Nothing to copy yet. Calculate an estimate first.', true);
         return;
       }
+      if (!navigator.clipboard?.writeText) {
+        setStatus('Clipboard copy is not available in this browser. Manually select and copy the JSON.', true);
+        return;
+      }
       try {
         await navigator.clipboard.writeText(text);
         setStatus('Estimate JSON copied to clipboard.');
       } catch {
-        setStatus('Clipboard copy failed. Manually select and copy the JSON.', true);
+        setStatus('Clipboard copy failed (permissions or browser restrictions). Manually select and copy the JSON.', true);
       }
     }
 
