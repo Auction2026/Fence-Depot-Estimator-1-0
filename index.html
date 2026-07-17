@@ -115,6 +115,7 @@
     const grandCell = document.getElementById('grandCell');
     const transferData = document.getElementById('transferData');
     const statusEl = document.getElementById('status');
+    const POST_SPACING_FEET = 8;
 
     function numberValue(value, fallback = 0) {
       const parsed = Number(value);
@@ -140,7 +141,7 @@
 
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
-      const postCount = Math.ceil(input.linearFeet / 8) + input.corners + input.smallGates + (input.largeGates * 2);
+      const postCount = Math.ceil(input.linearFeet / POST_SPACING_FEET) + input.corners + input.smallGates + (input.largeGates * 2);
       const lines = [
         { item: 'Fence Materials', qty: input.linearFeet, unit: pricing.materialPerFoot, total: input.linearFeet * pricing.materialPerFoot },
         { item: 'Posts', qty: postCount, unit: pricing.postCost, total: postCount * pricing.postCost },
@@ -222,7 +223,8 @@
         setStatus('Nothing to download yet. Calculate an estimate first.', true);
         return;
       }
-      const projectName = (fields.projectName.value || 'fence-estimate')
+      const rawProjectName = fields.projectName.value || 'fence-estimate';
+      const projectName = rawProjectName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '') || 'fence-estimate';
@@ -255,9 +257,13 @@
       if (!file) {
         return;
       }
-      const text = await file.text();
-      transferData.value = text;
-      importJSONText(text);
+      try {
+        const text = await file.text();
+        transferData.value = text;
+        importJSONText(text);
+      } catch {
+        setStatus('Could not read the selected file. Please try another JSON file.', true);
+      }
     });
 
     const initialInput = collectInput();
