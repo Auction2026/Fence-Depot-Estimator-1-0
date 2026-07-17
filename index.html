@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fence Depot Estimator</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; background: #f5f7fb; color: #1b1f24; }
+    h1, h2 { margin-bottom: 0.5rem; }
+    .grid { display: grid; gap: 0.75rem; max-width: 780px; }
+    .grid.two { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    label { display: grid; gap: 0.3rem; font-size: 0.95rem; }
+    input, textarea, select, button { font: inherit; padding: 0.55rem; border-radius: 6px; border: 1px solid #ccd3dd; }
+    textarea { min-height: 150px; }
+    button { background: #0f62fe; color: #fff; border: 0; cursor: pointer; }
+    button.secondary { background: #4f5d75; }
+    .row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .card { background: #fff; border-radius: 10px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.12); margin-bottom: 1rem; }
+    table { border-collapse: collapse; width: 100%; background: #fff; }
+    th, td { border: 1px solid #d7dde8; padding: 0.6rem; text-align: left; }
+    th { background: #eff3fa; }
+    .status { margin-top: 0.5rem; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>Fence Depot Estimator</h1>
+  <p>Enter project details, calculate totals, then transfer data with JSON copy/paste, file import, or download.</p>
+
+  <section class="card grid two" id="estimateForm">
+    <label>Project Name
+      <input id="projectName" type="text" placeholder="Backyard fence" />
+    </label>
+    <label>Fence Type
+      <select id="fenceType">
+        <option value="wood">Wood</option>
+        <option value="vinyl">Vinyl</option>
+        <option value="chain-link">Chain Link</option>
+      </select>
+    </label>
+    <label>Total Linear Feet
+      <input id="linearFeet" type="number" min="0" step="0.1" value="200" />
+    </label>
+    <label>Corners
+      <input id="corners" type="number" min="0" step="1" value="4" />
+    </label>
+    <label>Small Gates
+      <input id="smallGates" type="number" min="0" step="1" value="1" />
+    </label>
+    <label>Large Gates
+      <input id="largeGates" type="number" min="0" step="1" value="0" />
+    </label>
+    <label>Labor ($ per ft)
+      <input id="laborPerFoot" type="number" min="0" step="0.01" value="12" />
+    </label>
+    <label>Tax Rate (%)
+      <input id="taxRate" type="number" min="0" step="0.01" value="7" />
+    </label>
+  </section>
+
+  <div class="row card">
+    <button id="calculateBtn" type="button">Calculate Estimate</button>
+    <button id="copyBtn" class="secondary" type="button">Copy Estimate JSON</button>
+    <button id="downloadBtn" class="secondary" type="button">Download Estimate JSON</button>
+  </div>
+
+  <section class="card">
+    <h2>Data Transfer</h2>
+    <p>Paste JSON from another system or upload a JSON file to load values into this estimator.</p>
+    <div class="grid">
+      <label for="transferData">Transfer JSON</label>
+      <textarea id="transferData" placeholder='{"projectName":"Front Fence","linearFeet":150}'></textarea>
+      <div class="row">
+        <button id="importBtn" class="secondary" type="button">Import Data</button>
+        <label>Upload JSON file
+          <input id="fileInput" type="file" accept="application/json" />
+        </label>
+      </div>
+      <div id="status" class="status"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Estimate Summary</h2>
+    <table>
+      <thead>
+        <tr><th>Item</th><th>Qty</th><th>Unit Cost</th><th>Total</th></tr>
+      </thead>
+      <tbody id="summaryBody"></tbody>
+      <tfoot>
+        <tr><th colspan="3">Subtotal</th><th id="subtotalCell">$0.00</th></tr>
+        <tr><th colspan="3">Tax</th><th id="taxCell">$0.00</th></tr>
+        <tr><th colspan="3">Grand Total</th><th id="grandCell">$0.00</th></tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <script>
+    const pricingByType = {
+      wood: { materialPerFoot: 28, postCost: 24, fastenerPerFoot: 2.5, smallGateCost: 280, largeGateCost: 420 },
+      vinyl: { materialPerFoot: 36, postCost: 32, fastenerPerFoot: 2, smallGateCost: 360, largeGateCost: 520 },
+      'chain-link': { materialPerFoot: 22, postCost: 18, fastenerPerFoot: 1.8, smallGateCost: 240, largeGateCost: 380 }
+    };
+
+    const fields = {
+      projectName: document.getElementById('projectName'),
+      fenceType: document.getElementById('fenceType'),
+      linearFeet: document.getElementById('linearFeet'),
+      corners: document.getElementById('corners'),
+      smallGates: document.getElementById('smallGates'),
+      largeGates: document.getElementById('largeGates'),
+      laborPerFoot: document.getElementById('laborPerFoot'),
+      taxRate: document.getElementById('taxRate')
+    };
+
+    const summaryBody = document.getElementById('summaryBody');
+    const subtotalCell = document.getElementById('subtotalCell');
+    const taxCell = document.getElementById('taxCell');
+    const grandCell = document.getElementById('grandCell');
+    const transferData = document.getElementById('transferData');
+    const statusEl = document.getElementById('status');
+    const POST_SPACING_FEET = 8;
+    const DOWNLOAD_CLEANUP_DELAY_MS = 100;
+
+    function numberValue(value, fallback = 0) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function money(value) {
+      return `$${value.toFixed(2)}`;
+    }
+
+    function sanitizeFilename(name, fallback = 'fence-estimate') {
+      const sanitized = (name || fallback)
+        .replace(/[/\\]/g, '-')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        // Avoid hidden-file style names that begin with period characters.
+        .replace(/^\.+/, '')
+        .replace(/^-+|-+$/g, '');
+      return sanitized || fallback;
+    }
+
+    function collectInput() {
+      return {
+        projectName: fields.projectName.value.trim(),
+        fenceType: fields.fenceType.value,
+        linearFeet: Math.max(0, numberValue(fields.linearFeet.value)),
+        corners: Math.max(0, Math.round(numberValue(fields.corners.value))),
+        smallGates: Math.max(0, Math.round(numberValue(fields.smallGates.value))),
+        largeGates: Math.max(0, Math.round(numberValue(fields.largeGates.value))),
+        laborPerFoot: Math.max(0, numberValue(fields.laborPerFoot.value)),
+        taxRate: Math.max(0, numberValue(fields.taxRate.value))
+      };
+    }
+
+    function calculateEstimate(input) {
+      const pricing = pricingByType[input.fenceType] || pricingByType.wood;
+      // n fence sections require n+1 posts, e.g. 23ft at 8ft spacing needs posts at 0/8/16/23.
+      const linePostCount = input.linearFeet > 0 ? Math.ceil(input.linearFeet / POST_SPACING_FEET) + 1 : 0;
+      // Assumes one extra reinforcement post per corner/small gate and two per large gate.
+      const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
+      const lines = [
+        { item: 'Fence Materials', qty: input.linearFeet, unit: pricing.materialPerFoot, total: input.linearFeet * pricing.materialPerFoot },
+        { item: 'Posts', qty: postCount, unit: pricing.postCost, total: postCount * pricing.postCost },
+        { item: 'Fasteners/Hardware', qty: input.linearFeet, unit: pricing.fastenerPerFoot, total: input.linearFeet * pricing.fastenerPerFoot },
+        { item: 'Small Gates', qty: input.smallGates, unit: pricing.smallGateCost, total: input.smallGates * pricing.smallGateCost },
+        { item: 'Large Gates', qty: input.largeGates, unit: pricing.largeGateCost, total: input.largeGates * pricing.largeGateCost },
+        { item: 'Labor', qty: input.linearFeet, unit: input.laborPerFoot, total: input.linearFeet * input.laborPerFoot }
+      ];
+      const subtotal = lines.reduce((sum, line) => sum + line.total, 0);
+      const tax = subtotal * (input.taxRate / 100);
+      const grandTotal = subtotal + tax;
+      return { lines, subtotal, tax, grandTotal };
+    }
+
+    function renderEstimate(input, estimate) {
+      summaryBody.innerHTML = '';
+      estimate.lines.forEach(line => {
+        const tr = document.createElement('tr');
+        const cells = [line.item, String(line.qty), money(line.unit), money(line.total)];
+        cells.forEach(value => {
+          const td = document.createElement('td');
+          td.textContent = value;
+          tr.appendChild(td);
+        });
+        summaryBody.appendChild(tr);
+      });
+      subtotalCell.textContent = money(estimate.subtotal);
+      taxCell.textContent = money(estimate.tax);
+      grandCell.textContent = money(estimate.grandTotal);
+      transferData.value = JSON.stringify({ input, estimate }, null, 2);
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.style.color = isError ? '#a30000' : '#0e6f0e';
+    }
+
+    function applyInput(data) {
+      const normalized = {
+        projectName: data.projectName ?? '',
+        fenceType: pricingByType[data.fenceType] ? data.fenceType : 'wood',
+        linearFeet: data.linearFeet ?? 0,
+        corners: data.corners ?? 0,
+        smallGates: data.smallGates ?? 0,
+        largeGates: data.largeGates ?? 0,
+        laborPerFoot: data.laborPerFoot ?? 0,
+        taxRate: data.taxRate ?? 0
+      };
+      Object.keys(fields).forEach(key => {
+        fields[key].value = normalized[key];
+      });
+      const input = collectInput();
+      const estimate = calculateEstimate(input);
+      renderEstimate(input, estimate);
+    }
+
+    function importJSONText(text) {
+      try {
+        const parsed = JSON.parse(text);
+        const input = parsed.input && typeof parsed.input === 'object' ? parsed.input : parsed;
+        applyInput(input);
+        setStatus('Data imported successfully.');
+      } catch {
+        setStatus('Could not import data. Please use valid JSON.', true);
+      }
+    }
+
+    async function copyJSON() {
+      const text = transferData.value.trim();
+      if (!text) {
+        setStatus('Nothing to copy yet. Calculate an estimate first.', true);
+        return;
+      }
+      if (!navigator.clipboard?.writeText) {
+        setStatus('Clipboard copy is not available in this browser. Manually select and copy the JSON.', true);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        setStatus('Estimate JSON copied to clipboard.');
+      } catch {
+        setStatus('Clipboard copy failed (permissions or browser restrictions). Manually select and copy the JSON.', true);
+      }
+    }
+
+    function downloadJSON() {
+      const text = transferData.value.trim();
+      if (!text) {
+        setStatus('Nothing to download yet. Calculate an estimate first.', true);
+        return;
+      }
+      const projectName = sanitizeFilename(fields.projectName.value, 'fence-estimate');
+      const blob = new Blob([text], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${projectName}.json`;
+      document.body.appendChild(a);
+      a.click();
+      // Delay cleanup slightly so browsers can start the download before URL revocation.
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, DOWNLOAD_CLEANUP_DELAY_MS);
+      setStatus('Estimate JSON download started. If downloads are blocked, use Copy Estimate JSON.');
+    }
+
+    document.getElementById('calculateBtn').addEventListener('click', () => {
+      const input = collectInput();
+      const estimate = calculateEstimate(input);
+      renderEstimate(input, estimate);
+      setStatus('Estimate calculated.');
+    });
+
+    document.getElementById('importBtn').addEventListener('click', () => {
+      importJSONText(transferData.value);
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', copyJSON);
+    document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
+
+    document.getElementById('fileInput').addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) {
+        return;
+      }
+      try {
+        const text = await file.text();
+        transferData.value = text;
+        importJSONText(text);
+      } catch {
+        setStatus('Could not read the selected file. Please try another JSON file.', true);
+      }
+    });
+
+    const initialInput = collectInput();
+    renderEstimate(initialInput, calculateEstimate(initialInput));
+  </script>
+</body>
+</html>

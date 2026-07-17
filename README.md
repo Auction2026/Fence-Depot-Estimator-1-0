@@ -1,2 +1,18 @@
 # Fence-Depot-Estimator-1-0
-Fence Estimating Program  
+
+Simple browser-based fence estimating tool built with HTML + JavaScript.
+
+## Run
+
+Open `index.html` in a browser from your cloned repository folder.
+
+## What it does
+
+- Calculates a fence estimate (materials, posts, gates, labor, tax, total)
+- Lets you transfer data by:
+  - Pasting/importing JSON
+  - Uploading a JSON file
+  - Copying estimate JSON to clipboard
+  - Downloading estimate JSON file
+
+If download is restricted in your environment, use **Copy Estimate JSON** and paste it into your target system.
