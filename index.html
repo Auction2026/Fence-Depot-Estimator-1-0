@@ -126,6 +126,14 @@
       return `$${value.toFixed(2)}`;
     }
 
+    function sanitizeFilename(name, fallback = 'fence-estimate') {
+      const sanitized = (name || fallback)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      return sanitized || fallback;
+    }
+
     function collectInput() {
       return {
         projectName: fields.projectName.value.trim(),
@@ -141,7 +149,9 @@
 
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
-      const postCount = Math.ceil(input.linearFeet / POST_SPACING_FEET) + input.corners + input.smallGates + (input.largeGates * 2);
+      const linePostCount = Math.ceil(input.linearFeet / POST_SPACING_FEET);
+      // Each corner and small gate needs one additional post; each large gate needs two.
+      const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
       const lines = [
         { item: 'Fence Materials', qty: input.linearFeet, unit: pricing.materialPerFoot, total: input.linearFeet * pricing.materialPerFoot },
         { item: 'Posts', qty: postCount, unit: pricing.postCost, total: postCount * pricing.postCost },
@@ -188,8 +198,9 @@
       Object.keys(fields).forEach(key => {
         fields[key].value = normalized[key];
       });
-      const estimate = calculateEstimate(collectInput());
-      renderEstimate(collectInput(), estimate);
+      const input = collectInput();
+      const estimate = calculateEstimate(input);
+      renderEstimate(input, estimate);
     }
 
     function importJSONText(text) {
@@ -223,11 +234,7 @@
         setStatus('Nothing to download yet. Calculate an estimate first.', true);
         return;
       }
-      const rawProjectName = fields.projectName.value || 'fence-estimate';
-      const projectName = rawProjectName
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '') || 'fence-estimate';
+      const projectName = sanitizeFilename(fields.projectName.value, 'fence-estimate');
       const blob = new Blob([text], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -253,7 +260,7 @@
     document.getElementById('downloadBtn').addEventListener('click', downloadJSON);
 
     document.getElementById('fileInput').addEventListener('change', async (event) => {
-      const file = event.target.files && event.target.files[0];
+      const file = event.target.files?.[0];
       if (!file) {
         return;
       }
