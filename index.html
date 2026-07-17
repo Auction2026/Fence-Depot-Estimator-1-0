@@ -128,7 +128,7 @@
 
     function sanitizeFilename(name, fallback = 'fence-estimate') {
       const sanitized = (name || fallback)
-        .replace(/[\\/]/g, '-')
+        .replace(/[/\\]/g, '-')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^\.+/, '')
@@ -151,8 +151,8 @@
 
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
-      const linePostCount = Math.ceil(input.linearFeet / POST_SPACING_FEET);
-      // Base spacing assumes straight runs; corners and gates add reinforcement posts.
+      const linePostCount = input.linearFeet > 0 ? Math.floor(input.linearFeet / POST_SPACING_FEET) + 1 : 0;
+      // Assumes one extra reinforcement post per corner/small gate and two per large gate.
       const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
       const lines = [
         { item: 'Fence Materials', qty: input.linearFeet, unit: pricing.materialPerFoot, total: input.linearFeet * pricing.materialPerFoot },
