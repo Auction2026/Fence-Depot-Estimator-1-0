@@ -71,8 +71,9 @@
       <textarea id="transferData" placeholder='{"projectName":"Front Fence","linearFeet":150}'></textarea>
       <div class="row">
         <button id="importBtn" class="secondary" type="button">Import Data</button>
-        <label for="fileInput">Upload JSON file</label>
-        <input id="fileInput" type="file" accept="application/json" />
+        <label>Upload JSON file
+          <input id="fileInput" type="file" accept="application/json" />
+        </label>
       </div>
       <div id="status" class="status"></div>
     </div>
@@ -118,6 +119,7 @@
     const transferData = document.getElementById('transferData');
     const statusEl = document.getElementById('status');
     const POST_SPACING_FEET = 8;
+    const DOWNLOAD_CLEANUP_DELAY_MS = 100;
 
     function numberValue(value, fallback = 0) {
       const parsed = Number(value);
@@ -154,7 +156,7 @@
 
     function calculateEstimate(input) {
       const pricing = pricingByType[input.fenceType] || pricingByType.wood;
-      // n fence sections require n+1 posts, so we add one starting post for non-zero runs.
+      // n fence sections require n+1 posts, e.g. 24ft at 8ft spacing needs posts at 0/8/16/24.
       const linePostCount = input.linearFeet > 0 ? Math.floor(input.linearFeet / POST_SPACING_FEET) + 1 : 0;
       // Assumes one extra reinforcement post per corner/small gate and two per large gate.
       const postCount = linePostCount + input.corners + input.smallGates + (input.largeGates * 2);
@@ -252,7 +254,7 @@
       a.download = `${projectName}.json`;
       a.click();
       // Delay cleanup slightly so browsers can start the download before URL revocation.
-      setTimeout(() => URL.revokeObjectURL(url), 100);
+      setTimeout(() => URL.revokeObjectURL(url), DOWNLOAD_CLEANUP_DELAY_MS);
       setStatus('Estimate JSON download started. If downloads are blocked, use Copy Estimate JSON.');
     }
 
