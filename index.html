@@ -222,7 +222,10 @@
         setStatus('Nothing to download yet. Calculate an estimate first.', true);
         return;
       }
-      const projectName = (fields.projectName.value || 'fence-estimate').replace(/[^a-z0-9-_]/gi, '-').toLowerCase();
+      const projectName = (fields.projectName.value || 'fence-estimate')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'fence-estimate';
       const blob = new Blob([text], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

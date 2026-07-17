@@ -4,7 +4,7 @@ Simple browser-based fence estimating tool built with HTML + JavaScript.
 
 ## Run
 
-Open `/home/runner/work/Fence-Depot-Estimator-1-0/Fence-Depot-Estimator-1-0/index.html` in a browser.
+Open `index.html` in a browser from your cloned repository folder.
 
 ## What it does
 
