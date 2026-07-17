@@ -178,7 +178,12 @@
       summaryBody.innerHTML = '';
       estimate.lines.forEach(line => {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${line.item}</td><td>${line.qty}</td><td>${money(line.unit)}</td><td>${money(line.total)}</td>`;
+        const cells = [line.item, String(line.qty), money(line.unit), money(line.total)];
+        cells.forEach(value => {
+          const td = document.createElement('td');
+          td.textContent = value;
+          tr.appendChild(td);
+        });
         summaryBody.appendChild(tr);
       });
       subtotalCell.textContent = money(estimate.subtotal);
