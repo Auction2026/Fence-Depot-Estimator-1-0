@@ -133,7 +133,7 @@
         .replace(/[/\\]/g, '-')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
-        // Avoid hidden-file style names that begin with dots.
+        // Avoid hidden-file style names that begin with period characters.
         .replace(/^\.+/, '')
         .replace(/^-+|-+$/g, '');
       return sanitized || fallback;
@@ -251,6 +251,7 @@
       a.href = url;
       a.download = `${projectName}.json`;
       a.click();
+      // Delay cleanup slightly so browsers can start the download before URL revocation.
       setTimeout(() => URL.revokeObjectURL(url), 100);
       setStatus('Estimate JSON download started. If downloads are blocked, use Copy Estimate JSON.');
     }
