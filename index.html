@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fence Depot Estimator</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #1a3c5e 0%, #2d6a9f 100%);
+      color: #fff;
+      padding: 22px 20px 18px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+    }
+    header h1 {
+      font-size: 2rem;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    header p {
+      margin-top: 4px;
+      font-size: 0.95rem;
+      opacity: 0.85;
+    }
+
+    /* ── Layout wrapper ───────────────────────────────────── */
+    .page-wrapper {
+      max-width: 960px;
+      margin: 28px auto;
+      padding: 0 16px 40px;
+    }
+
+    /* ── Cards ────────────────────────────────────────────── */
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+      padding: 24px 28px;
+      margin-bottom: 22px;
+    }
+    .card h2 {
+      font-size: 1.15rem;
+      color: #1a3c5e;
+      border-bottom: 2px solid #2d6a9f;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card h2 .icon { font-size: 1.3rem; }
+
+    /* ── Form grid ────────────────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px 20px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #4a5568;
+      gap: 5px;
+    }
+    label span.hint {
+      font-weight: 400;
+      font-size: 0.78rem;
+      color: #718096;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      padding: 9px 12px;
+      border: 1.5px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      color: #2d3748;
+      background: #f7fafc;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      outline: none;
+      border-color: #2d6a9f;
+      background: #fff;
+    }
+
+    /* ── Gate rows ────────────────────────────────────────── */
+    #gate-rows { display: flex; flex-direction: column; gap: 12px; }
+
+    .gate-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+      background: #f7fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+    .gate-row label { font-size: 0.82rem; }
+
+    .btn-remove {
+      background: #fc8181;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      transition: background 0.2s;
+      align-self: flex-end;
+    }
+    .btn-remove:hover { background: #e53e3e; }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .btn {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #1a3c5e, #2d6a9f);
+      color: #fff;
+      box-shadow: 0 3px 8px rgba(45,106,159,0.4);
+    }
+    .btn-primary:hover { box-shadow: 0 4px 14px rgba(45,106,159,0.55); }
+
+    .btn-secondary {
+      background: #edf2f7;
+      color: #2d3748;
+      border: 1.5px solid #cbd5e0;
+    }
+    .btn-secondary:hover { background: #e2e8f0; }
+
+    .btn-success {
+      background: linear-gradient(135deg, #276749, #38a169);
+      color: #fff;
+      box-shadow: 0 3px 8px rgba(56,161,105,0.4);
+    }
+    .btn-success:hover { box-shadow: 0 4px 14px rgba(56,161,105,0.55); }
+
+    .btn-add {
+      background: #ebf8ff;
+      color: #2b6cb0;
+      border: 1.5px dashed #90cdf4;
+      padding: 9px 18px;
+      border-radius: 7px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-add:hover { background: #bee3f8; }
+
+    /* ── Results ──────────────────────────────────────────── */
+    #results { display: none; }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .summary-box {
+      background: #ebf8ff;
+      border: 1px solid #bee3f8;
+      border-radius: 8px;
+      padding: 14px 12px;
+      text-align: center;
+    }
+    .summary-box .val {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: #2b6cb0;
+      line-height: 1.2;
+    }
+    .summary-box .lbl {
+      font-size: 0.78rem;
+      color: #4a5568;
+      margin-top: 3px;
+    }
+
+    /* ── Material table ───────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead tr { background: #2d6a9f; color: #fff; }
+    thead th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+    tbody tr:nth-child(even) { background: #f7fafc; }
+    tbody tr:hover { background: #ebf8ff; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid #e2e8f0; }
+    tfoot tr { background: #1a3c5e; color: #fff; font-weight: 700; }
+    tfoot td { padding: 10px 14px; }
+
+    /* ── Notes ────────────────────────────────────────────── */
+    .note-box {
+      background: #fffbeb;
+      border-left: 4px solid #f6ad55;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.86rem;
+      color: #744210;
+      margin-top: 18px;
+    }
+    .note-box strong { display: block; margin-bottom: 4px; }
+
+    /* ── Print styles ─────────────────────────────────────── */
+    @media print {
+      body { background: #fff; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+      .no-print { display: none !important; }
+      header { background: #1a3c5e !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      thead tr { background: #2d6a9f !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+
+    @media (max-width: 520px) {
+      header h1 { font-size: 1.4rem; }
+      .gate-row { grid-template-columns: 1fr 1fr; }
+      .gate-row .btn-remove { grid-column: span 2; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🏗️ Fence Depot Estimator</h1>
+  <p>Calculate materials & costs for your fencing project</p>
+</header>
+
+<div class="page-wrapper">
+
+  <!-- ── STEP 1: Fence Type ─────────────────────────────── -->
+  <div class="card no-print" id="card-type">
+    <h2><span class="icon">1️⃣</span> Fence Type &amp; Style</h2>
+    <div class="form-grid">
+
+      <label>
+        Fence Type
+        <select id="fenceType" onchange="onFenceTypeChange()">
+          <option value="wood_privacy">Wood Privacy (6ft boards)</option>
+          <option value="wood_split">Wood Split Rail</option>
+          <option value="chain_link">Chain Link</option>
+          <option value="vinyl_privacy">Vinyl Privacy Panel</option>
+          <option value="aluminum">Aluminum / Ornamental</option>
+        </select>
+      </label>
+
+      <label>
+        Fence Height
+        <select id="fenceHeight">
+          <option value="3">3 ft</option>
+          <option value="4">4 ft</option>
+          <option value="5">5 ft</option>
+          <option value="6" selected>6 ft</option>
+          <option value="8">8 ft</option>
+        </select>
+      </label>
+
+      <label>
+        Post Spacing (ft)
+        <span class="hint">Distance between posts</span>
+        <input type="number" id="postSpacing" value="8" min="4" max="12" step="0.5" />
+      </label>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Dimensions ─────────────────────────────── -->
+  <div class="card no-print" id="card-dims">
+    <h2><span class="icon">2️⃣</span> Project Dimensions</h2>
+    <div class="form-grid">
+
+      <label>
+        Total Linear Footage (ft)
+        <span class="hint">Measure all fence lines added together</span>
+        <input type="number" id="linearFeet" value="" min="1" placeholder="e.g. 150" />
+      </label>
+
+      <label>
+        Corner / End Posts
+        <span class="hint">Count each corner &amp; end point</span>
+        <input type="number" id="corners" value="4" min="0" />
+      </label>
+
+      <label>
+        Waste / Overage %
+        <span class="hint">Extra material buffer (recommend 10%)</span>
+        <input type="number" id="waste" value="10" min="0" max="30" />
+      </label>
+
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Gates ──────────────────────────────────── -->
+  <div class="card no-print" id="card-gates">
+    <h2><span class="icon">3️⃣</span> Gates</h2>
+    <div id="gate-rows"></div>
+    <div style="margin-top:14px;">
+      <button class="btn-add" onclick="addGateRow()">＋ Add a Gate</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Pricing ────────────────────────────────── -->
+  <div class="card no-print" id="card-pricing">
+    <h2><span class="icon">4️⃣</span> Unit Prices <span style="font-size:0.78rem;font-weight:400;color:#718096;">(edit to match your local costs)</span></h2>
+    <div class="form-grid" id="pricing-grid">
+      <!-- injected by JS based on fence type -->
+    </div>
+    <div class="form-grid" style="margin-top:14px;">
+      <label>
+        Labour Rate ($/linear ft)
+        <span class="hint">Set 0 if materials only</span>
+        <input type="number" id="labourRate" value="8" min="0" step="0.5" />
+      </label>
+      <label>
+        Sales Tax %
+        <input type="number" id="taxRate" value="0" min="0" max="30" step="0.5" />
+      </label>
+    </div>
+  </div>
+
+  <!-- ── Action Buttons ─────────────────────────────────── -->
+  <div class="btn-row no-print" style="justify-content:center; margin-bottom: 28px;">
+    <button class="btn btn-primary" onclick="calculate()">📊 Calculate Estimate</button>
+    <button class="btn btn-secondary" onclick="resetForm()">🔄 Reset</button>
+  </div>
+
+  <!-- ── RESULTS ────────────────────────────────────────── -->
+  <div id="results">
+
+    <div class="card">
+      <h2><span class="icon">📋</span> Estimate Summary</h2>
+
+      <div class="summary-grid" id="summary-boxes"></div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Unit</th>
+              <th>Unit Price</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="materials-body"></tbody>
+          <tfoot id="materials-foot"></tfoot>
+        </table>
+      </div>
+
+      <div class="note-box">
+        <strong>⚠️ Important Notes</strong>
+        Prices are estimates only. Always get supplier quotes before purchasing.
+        Post holes, concrete, and site preparation may add additional costs.
+        Check local council / permit requirements before installing fencing.
+      </div>
+
+      <div class="btn-row no-print" style="margin-top:20px;">
+        <button class="btn btn-success" onclick="window.print()">🖨️ Print / Save as PDF</button>
+        <button class="btn btn-secondary" onclick="resetForm()">🔄 Start New Estimate</button>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /page-wrapper -->
+
+<script>
+// ── Fence type definitions ────────────────────────────────────────────────────
+const FENCE_TYPES = {
+  wood_privacy: {
+    label: "Wood Privacy",
+    railsPerSection: 3,      // horizontal rails per bay
+    picketWidth: 0.5,        // ft per picket/board
+    picketLabel: "Pickets / Boards",
+    railLabel: "Horizontal Rails (2×4)",
+    prices: {
+      post: 18,              // per post
+      rail: 7,               // per rail
+      picket: 2.50,          // per picket
+      hardware: 0.40,        // per picket (nails/screws)
+      concrete: 6,           // per post hole (bag)
+      cap: 1.80,             // post cap per post
+    },
+    hasCap: true,
+  },
+  wood_split: {
+    label: "Split Rail",
+    railsPerSection: 2,
+    picketWidth: null,
+    picketLabel: null,
+    railLabel: "Split Rails",
+    prices: {
+      post: 22,
+      rail: 12,
+      hardware: 0.50,
+      concrete: 6,
+    },
+    hasCap: false,
+  },
+  chain_link: {
+    label: "Chain Link",
+    railsPerSection: 2,      // top & bottom rail per bay
+    picketWidth: null,
+    picketLabel: "Chain Link Mesh (linear ft)",
+    railLabel: "Top / Bottom Rails",
+    prices: {
+      post: 24,
+      rail: 8,
+      mesh: 4.50,            // per linear ft of mesh
+      hardware: 1.20,        // per post (ties, clips)
+      concrete: 8,
+    },
+    hasCap: true,
+  },
+  vinyl_privacy: {
+    label: "Vinyl Privacy Panel",
+    railsPerSection: 0,      // built into panel
+    picketWidth: null,
+    picketLabel: "Vinyl Panels",
+    railLabel: null,
+    prices: {
+      post: 35,
+      panel: 65,             // per panel (8ft)
+      hardware: 2,           // per post
+      concrete: 8,
+    },
+    hasCap: true,
+  },
+  aluminum: {
+    label: "Aluminum / Ornamental",
+    railsPerSection: 2,
+    picketWidth: null,
+    picketLabel: "Aluminum Panels",
+    railLabel: null,
+    prices: {
+      post: 40,
+      panel: 85,
+      hardware: 3,
+      concrete: 8,
+    },
+    hasCap: true,
+  },
+};
+
+// ── Pricing fields per fence type ────────────────────────────────────────────
+const PRICE_FIELDS = {
+  wood_privacy: [
+    { id:"p_post",     label:"Post (each)", key:"post" },
+    { id:"p_rail",     label:"Rail (each)", key:"rail" },
+    { id:"p_picket",   label:"Picket/Board (each)", key:"picket" },
+    { id:"p_hardware", label:"Hardware per Picket ($)", key:"hardware" },
+    { id:"p_concrete", label:"Concrete per Post ($)", key:"concrete" },
+    { id:"p_cap",      label:"Post Cap (each)", key:"cap" },
+  ],
+  wood_split: [
+    { id:"p_post",     label:"Post (each)", key:"post" },
+    { id:"p_rail",     label:"Split Rail (each)", key:"rail" },
+    { id:"p_hardware", label:"Hardware per Post ($)", key:"hardware" },
+    { id:"p_concrete", label:"Concrete per Post ($)", key:"concrete" },
+  ],
+  chain_link: [
+    { id:"p_post",     label:"Post (each)", key:"post" },
+    { id:"p_rail",     label:"Rail (each)", key:"rail" },
+    { id:"p_mesh",     label:"Chain Link Mesh ($/lin ft)", key:"mesh" },
+    { id:"p_hardware", label:"Hardware per Post ($)", key:"hardware" },
+    { id:"p_concrete", label:"Concrete per Post ($)", key:"concrete" },
+  ],
+  vinyl_privacy: [
+    { id:"p_post",     label:"Post (each)", key:"post" },
+    { id:"p_panel",    label:"Vinyl Panel (each)", key:"panel" },
+    { id:"p_hardware", label:"Hardware per Post ($)", key:"hardware" },
+    { id:"p_concrete", label:"Concrete per Post ($)", key:"concrete" },
+  ],
+  aluminum: [
+    { id:"p_post",     label:"Post (each)", key:"post" },
+    { id:"p_panel",    label:"Aluminum Panel (each)", key:"panel" },
+    { id:"p_hardware", label:"Hardware per Post ($)", key:"hardware" },
+    { id:"p_concrete", label:"Concrete per Post ($)", key:"concrete" },
+  ],
+};
+
+// ── Initialise pricing fields when type changes ───────────────────────────────
+function onFenceTypeChange() {
+  const type = document.getElementById('fenceType').value;
+  const def  = FENCE_TYPES[type];
+  const fields = PRICE_FIELDS[type];
+  const grid = document.getElementById('pricing-grid');
+  grid.innerHTML = '';
+
+  fields.forEach(f => {
+    const price = def.prices[f.key] ?? 0;
+    grid.insertAdjacentHTML('beforeend', `
+      <label>
+        ${f.label}
+        <input type="number" id="${f.id}" value="${price}" min="0" step="0.01" />
+      </label>
+    `);
+  });
+}
+
+// ── Gate rows ────────────────────────────────────────────────────────────────
+const GATE_PRICES = { single: 120, double: 220 };
+let nextGateId = 0;
+
+function addGateRow() {
+  nextGateId++;
+  const id = nextGateId;
+  document.getElementById('gate-rows').insertAdjacentHTML('beforeend', `
+    <div class="gate-row" id="gate-${id}">
+      <label>
+        Gate Type
+        <select id="gtype-${id}">
+          <option value="single">Single Walk Gate</option>
+          <option value="double">Double Drive Gate</option>
+        </select>
+      </label>
+      <label>
+        Width (ft)
+        <input type="number" id="gwidth-${id}" value="4" min="2" max="20" step="0.5" />
+      </label>
+      <label>
+        Qty
+        <input type="number" id="gqty-${id}" value="1" min="1" max="10" />
+      </label>
+      <button class="btn-remove" onclick="removeGate(${id})" title="Remove">✕</button>
+    </div>
+  `);
+}
+
+function removeGate(id) {
+  const el = document.getElementById('gate-' + id);
+  if (el) el.remove();
+}
+
+function collectGates() {
+  const gates = [];
+  document.querySelectorAll('.gate-row').forEach(row => {
+    const id = row.id.replace('gate-', '');
+    const type  = document.getElementById('gtype-'  + id).value;
+    const width = parseFloat(document.getElementById('gwidth-' + id).value) || 4;
+    const qty   = parseInt(document.getElementById('gqty-'   + id).value)   || 1;
+    gates.push({ type, width, qty });
+  });
+  return gates;
+}
+
+// ── Calculation ──────────────────────────────────────────────────────────────
+function calculate() {
+  // inputs
+  const type        = document.getElementById('fenceType').value;
+  const heightFt    = parseFloat(document.getElementById('fenceHeight').value);
+  const postSpacing = parseFloat(document.getElementById('postSpacing').value) || 8;
+  const linFt       = parseFloat(document.getElementById('linearFeet').value);
+  const corners     = parseInt(document.getElementById('corners').value)       || 0;
+  const wasteP      = parseFloat(document.getElementById('waste').value)       / 100;
+  const labourRate  = parseFloat(document.getElementById('labourRate').value)  || 0;
+  const taxRate     = parseFloat(document.getElementById('taxRate').value)     / 100;
+
+  if (!linFt || linFt <= 0) {
+    alert('Please enter the total linear footage of your fence.');
+    document.getElementById('linearFeet').focus();
+    return;
+  }
+
+  const def    = FENCE_TYPES[type];
+  const fields = PRICE_FIELDS[type];
+
+  // read prices from inputs
+  const prices = {};
+  fields.forEach(f => {
+    prices[f.key] = parseFloat(document.getElementById(f.id).value) || 0;
+  });
+
+  // ── Line Post count ───────────────────────────────────────────────────────
+  // # of bays (sections) = linearFt / postSpacing; one post per bay + corners
+  const bays      = Math.ceil(linFt / postSpacing);
+  const postsCalc = Math.ceil(linFt / postSpacing) + corners;
+
+  // apply waste
+  const withWaste = v => Math.ceil(v * (1 + wasteP));
+
+  const rows = [];     // { item, qty, unit, unitPrice, total }
+  let   matTotal = 0;
+
+  function addRow(item, qty, unit, unitPrice) {
+    const total = qty * unitPrice;
+    matTotal += total;
+    rows.push({ item, qty, unit, unitPrice, total });
+  }
+
+  // ── Posts ─────────────────────────────────────────────────────────────────
+  const postQty = withWaste(postsCalc);
+  addRow('Fence Posts', postQty, 'each', prices.post || 0);
+
+  // ── Post Caps ─────────────────────────────────────────────────────────────
+  if (def.hasCap && prices.cap !== undefined) {
+    addRow('Post Caps', postQty, 'each', prices.cap);
+  }
+
+  // ── Rails ─────────────────────────────────────────────────────────────────
+  if (def.railsPerSection > 0 && def.railLabel && prices.rail !== undefined) {
+    // each section needs X rails; rail length assumed = postSpacing
+    const railQty = withWaste(bays * def.railsPerSection);
+    addRow(def.railLabel, railQty, 'each', prices.rail);
+  }
+
+  // ── Pickets / boards ──────────────────────────────────────────────────────
+  if (def.picketWidth && def.picketLabel && prices.picket !== undefined) {
+    const picketQty = withWaste(Math.ceil(linFt / def.picketWidth));
+    addRow(def.picketLabel, picketQty, 'each', prices.picket);
+    if (prices.hardware !== undefined) {
+      addRow('Nails / Screws / Hardware', picketQty, 'set', prices.hardware);
+    }
+  }
+
+  // ── Chain link mesh ───────────────────────────────────────────────────────
+  if (type === 'chain_link' && prices.mesh !== undefined) {
+    const meshFt = withWaste(linFt);
+    addRow('Chain Link Mesh', meshFt, 'lin ft', prices.mesh);
+    if (prices.hardware !== undefined) {
+      addRow('Ties / Clips / Hardware', postQty, 'per post', prices.hardware);
+    }
+  }
+
+  // ── Vinyl / Aluminum panels ───────────────────────────────────────────────
+  if ((type === 'vinyl_privacy' || type === 'aluminum') && prices.panel !== undefined) {
+    const panelQty = withWaste(bays);
+    addRow(def.picketLabel || 'Panels', panelQty, 'each', prices.panel);
+    if (prices.hardware !== undefined) {
+      addRow('Hardware / Brackets', postQty, 'per post', prices.hardware);
+    }
+  }
+
+  // ── Concrete ─────────────────────────────────────────────────────────────
+  if (prices.concrete !== undefined) {
+    addRow('Concrete (post holes)', postQty, 'per hole', prices.concrete);
+  }
+
+  // ── Gates ────────────────────────────────────────────────────────────────
+  const gates = collectGates();
+  let totalGateWidth = 0;
+  gates.forEach(g => {
+    const label         = g.type === 'double' ? 'Double Drive Gate' : 'Single Walk Gate';
+    const unitGatePrice = GATE_PRICES[g.type] ?? GATE_PRICES.single;
+    addRow(`${label} (${g.width}ft wide)`, g.qty, 'each', unitGatePrice);
+    totalGateWidth += g.width * g.qty;
+  });
+
+  // ── Totals ────────────────────────────────────────────────────────────────
+  const labourTotal = linFt * labourRate;
+  const subtotal    = matTotal + labourTotal;
+  const tax         = subtotal * taxRate;
+  const grandTotal  = subtotal + tax;
+
+  // ── Render summary boxes ──────────────────────────────────────────────────
+  document.getElementById('summary-boxes').innerHTML = `
+    <div class="summary-box"><div class="val">${linFt} ft</div><div class="lbl">Total Fence Length</div></div>
+    <div class="summary-box"><div class="val">${postQty}</div><div class="lbl">Total Posts</div></div>
+    <div class="summary-box"><div class="val">${bays}</div><div class="lbl">Fence Sections</div></div>
+    <div class="summary-box"><div class="val">${gates.reduce((a,g) => a + g.qty, 0)}</div><div class="lbl">Gates</div></div>
+    <div class="summary-box"><div class="val">$${matTotal.toFixed(2)}</div><div class="lbl">Materials</div></div>
+    <div class="summary-box"><div class="val">$${labourTotal.toFixed(2)}</div><div class="lbl">Labour</div></div>
+    <div class="summary-box" style="background:#c6f6d5;border-color:#9ae6b4;">
+      <div class="val" style="color:#276749;">$${grandTotal.toFixed(2)}</div>
+      <div class="lbl">TOTAL (inc. tax)</div>
+    </div>
+  `;
+
+  // ── Render table rows ─────────────────────────────────────────────────────
+  const tbody = document.getElementById('materials-body');
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.item}</td>
+      <td>${r.qty}</td>
+      <td>${r.unit}</td>
+      <td>$${r.unitPrice.toFixed(2)}</td>
+      <td>$${r.total.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  // ── Footer ────────────────────────────────────────────────────────────────
+  document.getElementById('materials-foot').innerHTML = `
+    <tr><td colspan="4">Materials Subtotal</td><td>$${matTotal.toFixed(2)}</td></tr>
+    ${labourTotal > 0 ? `<tr><td colspan="4">Labour (${linFt} ft × $${labourRate}/ft)</td><td>$${labourTotal.toFixed(2)}</td></tr>` : ''}
+    ${tax > 0         ? `<tr><td colspan="4">Sales Tax (${(taxRate*100).toFixed(1)}%)</td><td>$${tax.toFixed(2)}</td></tr>` : ''}
+    <tr style="font-size:1.05rem;"><td colspan="4">GRAND TOTAL</td><td>$${grandTotal.toFixed(2)}</td></tr>
+  `;
+
+  // ── Show results ──────────────────────────────────────────────────────────
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'block';
+  resultsEl.scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Reset ────────────────────────────────────────────────────────────────────
+function resetForm() {
+  document.getElementById('linearFeet').value = '';
+  document.getElementById('corners').value    = '4';
+  document.getElementById('waste').value      = '10';
+  document.getElementById('fenceType').value  = 'wood_privacy';
+  document.getElementById('fenceHeight').value = '6';
+  document.getElementById('postSpacing').value = '8';
+  document.getElementById('labourRate').value  = '8';
+  document.getElementById('taxRate').value     = '0';
+  document.getElementById('gate-rows').innerHTML = '';
+  nextGateId = 0;
+  document.getElementById('results').style.display = 'none';
+  onFenceTypeChange();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+onFenceTypeChange();
+</script>
+
+</body>
+</html>
