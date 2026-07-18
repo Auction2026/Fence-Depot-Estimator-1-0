@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fence Depot – Estimating Program</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+<header class="header">
+  <div class="logo-box">
+    <span class="logo-text">FENCE</span>
+    <span class="logo-depot">DEPOT</span>
+  </div>
+  <div class="header-info">
+    <p class="co-name">Fence Depot – Locke</p>
+    <p>123 Main Street, Locke, Ontario &nbsp;|&nbsp; L0A 1A0</p>
+    <p>Phone: (905) 555-5555 &nbsp;|&nbsp; Email: info@fencedepotlocke.ca</p>
+  </div>
+  <div class="header-job">
+    <div class="job-num"  id="hdrJobNum">Job #: —</div>
+    <div class="job-stat" id="hdrJobStat"><span class="badge badge-estimate" id="hdrBadge">Estimate</span></div>
+    <div class="job-date" id="hdrJobDate"></div>
+  </div>
+</header>
+
+<!-- ============================================================ -->
+<!-- TAB NAVIGATION                                                -->
+<!-- ============================================================ -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="customer">Customer Info</button>
+  <button class="tab-btn" data-tab="fencetype">Fence Type</button>
+  <button class="tab-btn" data-tab="fencestyle">Fence Style</button>
+  <button class="tab-btn" data-tab="fencelayout">Fence Layout</button>
+  <button class="tab-btn" data-tab="installation">Installation</button>
+  <button class="tab-btn" data-tab="gatedrawings">Gate Drawings</button>
+  <button class="tab-btn" data-tab="permit">Building Permit</button>
+  <button class="tab-btn" data-tab="locate">Underground Locate</button>
+  <button class="tab-btn" data-tab="estimate">Fence Estimate</button>
+  <button class="tab-btn" data-tab="contract">Fence Contract</button>
+  <button class="tab-btn" data-tab="installpkg">Install Package</button>
+  <button class="tab-btn" data-tab="catalog">Parts Catalog</button>
+</nav>
+
+<!-- ============================================================ -->
+<!-- MAIN CONTENT                                                   -->
+<!-- ============================================================ -->
+<div class="main-content">
+
+
+<!-- ============================================================ -->
+<!-- TAB 1: CUSTOMER INFORMATION                                   -->
+<!-- ============================================================ -->
+<section id="tab-customer" class="tab-section active">
+  <div class="tab-header">
+    <h2>Customer Information</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('customer')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailCustomer()">📧 Email Customer</button>
+    </div>
+    <div class="date-stamp" id="ds-customer"></div>
+  </div>
+
+  <div id="lockBanner" class="lock-banner">
+    🔒 This job has been converted to a CONTRACT. All critical fields are locked to prevent accidental changes.
+  </div>
+
+  <!-- Job Info -->
+  <div class="form-section">
+    <div class="form-section-title">Job Information</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Job Number</label>
+        <input type="text" id="jobNumber" class="readonly-field" readonly placeholder="Click 'New Estimate' to generate">
+      </div>
+      <div class="form-group">
+        <label>Date Created</label>
+        <input type="date" id="estimateDate" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="jobStatus" class="estimable" onchange="onStatusChange()">
+          <option value="estimate">Estimate</option>
+          <option value="contract">Contract</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Type -->
+  <div class="form-section">
+    <div class="form-section-title">Customer Type</div>
+    <div class="radio-group">
+      <label><input type="radio" name="custType" value="individual" checked onchange="toggleCustType()"> Individual / Residential</label>
+      <label><input type="radio" name="custType" value="business" onchange="toggleCustType()"> Business / Corporation</label>
+    </div>
+  </div>
+
+  <!-- Business Fields -->
+  <div class="form-section hidden" id="bizSection">
+    <div class="form-section-title">Business / Corporation Details</div>
+    <div class="form-group">
+      <label>Company / Corporation Name *</label>
+      <input type="text" id="companyName" class="estimable">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Contact Person – First Name *</label>
+        <input type="text" id="contactFirst" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Contact Person – Last Name *</label>
+        <input type="text" id="contactLast" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Title / Role</label>
+        <input type="text" id="contactTitle" class="estimable">
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Details -->
+  <div class="form-section">
+    <div class="form-section-title" id="custDetailTitle">Customer Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>First Name *</label>
+        <input type="text" id="firstName" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Last Name *</label>
+        <input type="text" id="lastName" class="estimable">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Street Address *</label>
+      <input type="text" id="streetAddr" class="estimable">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>City *</label>
+        <input type="text" id="city" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Province</label>
+        <input type="text" id="province" class="estimable" placeholder="ON">
+      </div>
+      <div class="form-group">
+        <label>Postal Code</label>
+        <input type="text" id="postal" class="estimable">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone *</label>
+        <input type="tel" id="phone" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Cell / Alternate Phone</label>
+        <input type="tel" id="cellPhone" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="emailAddr" class="estimable">
+      </div>
+    </div>
+  </div>
+
+  <!-- Installation Address -->
+  <div class="form-section">
+    <div class="form-section-title">Installation Address (if different from above)</div>
+    <div class="form-group">
+      <label>Street Address</label>
+      <input type="text" id="instAddr" class="estimable">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" id="instCity" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Province</label>
+        <input type="text" id="instProv" class="estimable" placeholder="ON">
+      </div>
+      <div class="form-group">
+        <label>Postal Code</label>
+        <input type="text" id="instPostal" class="estimable">
+      </div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="form-section">
+    <div class="form-section-title">Notes / Additional Information</div>
+    <textarea id="custNotes" rows="4" class="estimable textarea-field" placeholder="Enter any special requirements, notes, or relevant information..."></textarea>
+  </div>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+    <button class="btn-primary" onclick="createNewEstimate()">+ New Estimate</button>
+    <button class="btn-secondary" onclick="saveData()">💾 Save</button>
+    <button class="btn-outline" id="convertBtn" onclick="convertToContract()">Convert to Contract</button>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 2: FENCE TYPE                                             -->
+<!-- ============================================================ -->
+<section id="tab-fencetype" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Type</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('fencetype')">🖨️ Print</button>
+    </div>
+    <div class="date-stamp" id="ds-fencetype"></div>
+  </div>
+
+  <div class="info-box">
+    Select the type of fence for this estimate. Your selection will automatically filter the correct styles, materials, and suppliers on the next tab.
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Select Fence Type</div>
+    <div class="fence-type-grid">
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="chainlink-res" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🏠</span>
+          <span class="card-title">Chain-Link Residential</span>
+          <span class="card-supplier">Standard Chain-Link Products</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="chainlink-com" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🏭</span>
+          <span class="card-title">Chain-Link Commercial</span>
+          <span class="card-supplier">Commercial Chain-Link Products</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="wood" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🪵</span>
+          <span class="card-title">Wood Fence</span>
+          <span class="card-supplier">Pressure Treated Lumber</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="pvc" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">⬜</span>
+          <span class="card-title">PVC Fence</span>
+          <span class="card-supplier">Homeland Vinyl – Gorilla Fence</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="wrought-iron" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">⚙️</span>
+          <span class="card-title">Wrought / Rod Iron</span>
+          <span class="card-supplier">Culture Direct Industries</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="guiderail" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🛡️</span>
+          <span class="card-title">Guiderail</span>
+          <span class="card-supplier">Arm Tech Industries</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="bollards" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🔵</span>
+          <span class="card-title">Bollards</span>
+          <span class="card-supplier">Fence Depot Inventory</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="highway" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🛣️</span>
+          <span class="card-title">Highway Fence</span>
+          <span class="card-supplier">Fence Depot Inventory</span>
+        </div>
+      </label>
+
+      <label class="fence-type-card">
+        <input type="radio" name="fenceType" value="gate-operators" onchange="onFenceTypeChange()">
+        <div class="card-inner">
+          <span class="card-icon">🚪</span>
+          <span class="card-title">Gate Operators</span>
+          <span class="card-supplier">Chamberlain Group</span>
+        </div>
+      </label>
+
+    </div>
+  </div>
+
+  <div id="supplierBox" class="info-box hidden">
+    <strong>Supplier:</strong> <span id="supplierText"></span>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 3: FENCE STYLE                                           -->
+<!-- ============================================================ -->
+<section id="tab-fencestyle" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Style</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('fencestyle')">🖨️ Print</button>
+    </div>
+    <div class="date-stamp" id="ds-fencestyle"></div>
+  </div>
+
+  <div id="styleNoType" class="info-box">
+    ⚠️ Please select a Fence Type on the previous tab before choosing a style.
+  </div>
+
+  <!-- Chain-Link Options -->
+  <div id="styleChainLink" class="hidden">
+
+    <div class="form-section">
+      <div class="form-section-title">Grade / Framework</div>
+      <div class="radio-group">
+        <label>
+          <input type="radio" name="clGrade" value="standard" checked onchange="onStyleChange()">
+          Standard &nbsp;(Top Rail 1-1/4" &nbsp;· Terminal 1-7/8" &nbsp;· Line Post 1-1/2")
+        </label><br>
+        <label>
+          <input type="radio" name="clGrade" value="upgraded" onchange="onStyleChange()">
+          Upgraded &nbsp;(Top Rail 1-5/8" &nbsp;· Terminal 2-3/8" &nbsp;· Line Post 1-7/8")
+        </label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Fence Height</div>
+      <div class="radio-group">
+        <label><input type="radio" name="fenceHeight" value="3" onchange="onStyleChange()"> 3 Feet</label>
+        <label><input type="radio" name="fenceHeight" value="4" onchange="onStyleChange()"> 4 Feet</label>
+        <label><input type="radio" name="fenceHeight" value="5" checked onchange="onStyleChange()"> 5 Feet</label>
+        <label><input type="radio" name="fenceHeight" value="6" onchange="onStyleChange()"> 6 Feet</label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Wire Gauge (Canadian Standard)</div>
+      <div class="radio-group">
+        <label><input type="radio" name="wireGauge" value="9" checked onchange="onStyleChange()"> 9 Gauge (Standard – Canadian Code)</label>
+        <label><input type="radio" name="wireGauge" value="11" onchange="onStyleChange()"> 11 Gauge</label>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title">Fence Colour</div>
+      <div class="radio-group">
+        <label><input type="radio" name="fenceColor" value="Galvanized" checked onchange="onStyleChange()"> Galvanized (Silver)</label>
+        <label><input type="radio" name="fenceColor" value="Black" onchange="onStyleChange()"> Black</label>
+        <label><input type="radio" name="fenceColor" value="White" onchange="onStyleChange()"> White (Special Order)</label>
+        <label><input type="radio" name="fenceColor" value="Brown" onchange="onStyleChange()"> Brown (Special Order)</label>
+        <label><input type="radio" name="fenceColor" value="Green" onchange="onStyleChange()"> Green (Special Order)</label>
+        <label><input type="radio" name="fenceColor" value="Taupe" onchange="onStyleChange()"> Taupe (Special Order)</label>
+      </div>
+      <div class="check-row" style="margin-top:12px;">
+        <label>
+          <input type="checkbox" id="galvFrameColorMesh" onchange="onStyleChange()">
+          Framework is Galvanized but mesh &amp; fittings are coloured (fittings stay galvanized colour)
+        </label>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Other fence types placeholder -->
+  <div id="styleOther" class="hidden">
+    <div class="form-section">
+      <div class="form-section-title">Style / Options</div>
+      <div class="info-box">
+        Detailed style options for this fence type will be added based on current product inventory. Contact Fence Depot for available product selections.
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Fence Height</label>
+          <input type="text" id="otherHeight" class="estimable" placeholder="e.g., 6 ft">
+        </div>
+        <div class="form-group">
+          <label>Style / Profile</label>
+          <input type="text" id="otherStyle" class="estimable" placeholder="Describe style...">
+        </div>
+        <div class="form-group">
+          <label>Colour</label>
+          <input type="text" id="otherColor" class="estimable" placeholder="Enter colour...">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Additional Notes</label>
+        <input type="text" id="otherStyleNotes" class="estimable" placeholder="Any special requirements...">
+      </div>
+    </div>
+  </div>
+
+  <div id="styleSummaryBox" class="info-box hidden" style="margin-top:0;">
+    <strong>Current Selection:</strong> <span id="styleSummaryText"></span>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 4: FENCE LAYOUT                                          -->
+<!-- ============================================================ -->
+<section id="tab-fencelayout" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Layout</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('fencelayout')">🖨️ Print</button>
+    </div>
+    <div class="date-stamp" id="ds-fencelayout"></div>
+  </div>
+
+  <!-- Fence Footage -->
+  <div class="form-section">
+    <div class="form-section-title">Fence Sections / Legs – Enter Footage (feet)</div>
+    <div class="info-box">
+      Enter the length of each fence leg or section below in feet. A new input box will appear automatically as you fill each one. Example: type <strong>125</strong> for 125 linear feet.
+    </div>
+    <div id="footageInputs"></div>
+    <div class="footage-total" id="footageTotal"></div>
+  </div>
+
+  <!-- Terminal Posts -->
+  <div class="form-section">
+    <div class="form-section-title">Terminal Posts – Enter Quantities</div>
+    <div class="info-box">
+      Terminal posts are the main (larger) posts at ends, corners, and gate openings.
+    </div>
+    <div class="post-inputs">
+      <div class="post-input-group">
+        <label>End Posts</label>
+        <input type="number" id="postEnd" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+      <div class="post-input-group">
+        <label>Corner Posts</label>
+        <input type="number" id="postCorner" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+      <div class="post-input-group">
+        <label>3-Way Corner Posts</label>
+        <input type="number" id="postThreeWay" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+      <div class="post-input-group">
+        <label>Gate Posts</label>
+        <input type="number" id="postGate" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+      <div class="post-input-group">
+        <label>Blank Posts</label>
+        <input type="number" id="postBlank" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+      <div class="post-input-group">
+        <label>Sets of Fittings</label>
+        <input type="number" id="postSetFittings" min="0" value="0" onchange="onLayoutChange()">
+      </div>
+    </div>
+    <div id="postSummary" style="margin-top:12px;font-size:13px;color:#555;"></div>
+  </div>
+
+  <!-- Gates -->
+  <div class="form-section">
+    <div class="form-section-title">Gates</div>
+
+    <div style="margin-bottom:20px;">
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="post-input-group" style="min-width:170px;">
+          <label>Single Gate Quantity</label>
+          <input type="number" id="singleGateQty" min="0" value="0" onchange="onGateChange()">
+        </div>
+        <div class="form-group" style="min-width:160px;">
+          <label>Standard Width</label>
+          <input type="text" value='42" (Standard)' readonly class="readonly-field">
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <label>Self-Closers Required?</label>
+          <div class="check-row" style="padding-top:10px;">
+            <label><input type="checkbox" id="selfCloser"> Yes – add self-closers on single gates</label>
+          </div>
+        </div>
+      </div>
+      <div id="singleGateCustom" class="gate-options hidden">
+        <h4>Custom Single Gate Sizing</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Extra Inches of Width</label>
+            <input type="number" id="singleExtraIn" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Price per Extra Inch ($)</label>
+            <input type="number" id="singlePricePerIn" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Custom Setup Charge ($)</label>
+            <input type="number" id="singleSetupChg" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="form-row" style="align-items:flex-end;">
+        <div class="post-input-group" style="min-width:170px;">
+          <label>Double Gate Quantity</label>
+          <input type="number" id="doubleGateQty" min="0" value="0" onchange="onGateChange()">
+        </div>
+        <div class="form-group" style="min-width:160px;">
+          <label>Standard Width</label>
+          <input type="text" value='84" (Standard)' readonly class="readonly-field">
+        </div>
+      </div>
+      <div id="doubleGateCustom" class="gate-options hidden">
+        <h4>Custom Double Gate Sizing</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Extra Inches of Width</label>
+            <input type="number" id="doubleExtraIn" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label>Price per Extra Inch ($)</label>
+            <input type="number" id="doublePricePerIn" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label>Custom Setup Charge ($)</label>
+            <input type="number" id="doubleSetupChg" min="0" step="0.01" value="0" placeholder="0.00">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Layout Notes -->
+  <div class="form-section">
+    <div class="form-section-title">Layout Notes</div>
+    <textarea id="layoutNotes" rows="3" class="estimable textarea-field" placeholder="Describe any special conditions – slope, obstacles, grade changes, etc."></textarea>
+  </div>
+
+  <div id="layoutSummaryBox" class="info-box hidden">
+    <strong>Layout Summary:</strong> <span id="layoutSummaryText"></span>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 5: FENCE INSTALLATION                                     -->
+<!-- ============================================================ -->
+<section id="tab-installation" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Installation</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('installation')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailInstall()">📧 Email</button>
+    </div>
+    <div class="date-stamp" id="ds-installation"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Installation Schedule</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Scheduled Start Date</label>
+        <input type="date" id="instStart" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Estimated Completion Date</label>
+        <input type="date" id="instEnd" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Crew Lead</label>
+        <input type="text" id="crewLead" class="estimable">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Installation Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Post Hole Method</label>
+        <select id="postHoleMethod" class="estimable">
+          <option value="">— Select —</option>
+          <option value="auger">Machine Auger</option>
+          <option value="hand">Hand Dig</option>
+          <option value="hammer">Hammer Drive</option>
+          <option value="concrete">Concrete Footing</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Concrete Mix</label>
+        <select id="concreteMix" class="estimable">
+          <option value="">— Select —</option>
+          <option value="80lb">80 lb Bags</option>
+          <option value="ready-mix">Ready Mix Truck</option>
+          <option value="none">None Required</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Special Site Conditions</label>
+      <textarea id="siteConditions" rows="3" class="estimable textarea-field" placeholder="Rock, tree roots, underground obstacles, grade changes, existing fence removal, etc."></textarea>
+    </div>
+    <div class="form-group">
+      <label>Installation Notes</label>
+      <textarea id="installNotes" rows="4" class="estimable textarea-field" placeholder="Special instructions for installation crew..."></textarea>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Labour</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Estimated Labour Hours</label>
+        <input type="number" id="labourHrs" min="0" step="0.5" class="estimable" placeholder="0" onchange="calcLabour()">
+      </div>
+      <div class="form-group">
+        <label>Labour Rate ($ / hr)</label>
+        <input type="number" id="labourRate" min="0" step="0.01" class="estimable" placeholder="0.00" onchange="calcLabour()">
+      </div>
+      <div class="form-group">
+        <label>Total Labour Cost</label>
+        <input type="text" id="labourTotal" readonly class="readonly-field">
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 6: GATE SHOP DRAWINGS                                     -->
+<!-- ============================================================ -->
+<section id="tab-gatedrawings" class="tab-section">
+  <div class="tab-header">
+    <h2>Gate Shop Drawings</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('gatedrawings')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailGateDrawings()">📧 Email</button>
+    </div>
+    <div class="date-stamp" id="ds-gatedrawings"></div>
+  </div>
+
+  <div class="info-box">
+    Gate specifications are auto-populated from your Fence Layout and Style selections.
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Gate Specification Summary</div>
+    <div id="gateDrawingsSummary" style="font-size:14px;line-height:1.8;color:#333;">
+      <em style="color:#888;">Complete Fence Style and Layout tabs to see gate specifications here.</em>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Custom Gate Notes / Drawing References</div>
+    <textarea id="gateDrawingNotes" rows="5" class="estimable textarea-field" placeholder="Custom gate notes, special hardware requirements, drawing reference numbers..."></textarea>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 7: BUILDING PERMIT                                        -->
+<!-- ============================================================ -->
+<section id="tab-permit" class="tab-section">
+  <div class="tab-header">
+    <h2>Building Permit</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('permit')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailPermit()">📧 Email to Township / City</button>
+    </div>
+    <div class="date-stamp" id="ds-permit"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Permit Requirement</div>
+    <div class="radio-group">
+      <label><input type="radio" name="permitReq" value="yes"> Yes – Permit Required</label>
+      <label><input type="radio" name="permitReq" value="no"> No – Not Required</label>
+      <label><input type="radio" name="permitReq" value="pending"> Pending Confirmation</label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Municipality / Building Department</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Municipality / Township</label>
+        <input type="text" id="permitMuni" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Building Dept. Phone</label>
+        <input type="tel" id="permitPhone" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Building Dept. Email</label>
+        <input type="email" id="permitEmail" class="estimable">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Permit Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Permit Number (if issued)</label>
+        <input type="text" id="permitNum" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Issue Date</label>
+        <input type="date" id="permitIssue" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Expiry Date</label>
+        <input type="date" id="permitExpiry" class="estimable">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Notes / Conditions</label>
+      <textarea id="permitNotes" rows="4" class="estimable textarea-field" placeholder="Setback requirements, inspection requirements, special conditions..."></textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 8: UNDERGROUND LOCATE                                     -->
+<!-- ============================================================ -->
+<section id="tab-locate" class="tab-section">
+  <div class="tab-header">
+    <h2>Underground Locate</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('locate')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailLocate()">📧 Email to Utilities</button>
+    </div>
+    <div class="date-stamp" id="ds-locate"></div>
+  </div>
+
+  <div class="info-box">
+    <strong>Ontario One Call:</strong> 1-800-400-2255 &nbsp;|&nbsp; Call at least 5 business days before digging.
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Locate Request</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Locate Reference Number</label>
+        <input type="text" id="locateNum" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Request Date</label>
+        <input type="date" id="locateReqDate" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Locate Valid Until</label>
+        <input type="date" id="locateExpiry" class="estimable">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Planned Excavation Start Date</label>
+        <input type="date" id="excavDate" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Maximum Dig Depth</label>
+        <input type="text" id="excavDepth" class="estimable" placeholder="e.g., 36 inches">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Utilities Identified on Site</div>
+    <div class="radio-group" style="flex-wrap:wrap;gap:12px;">
+      <label><input type="checkbox" id="utilGas"> Gas</label>
+      <label><input type="checkbox" id="utilElec"> Hydro / Electric</label>
+      <label><input type="checkbox" id="utilTelecom"> Telecom / Cable</label>
+      <label><input type="checkbox" id="utilWater"> Water</label>
+      <label><input type="checkbox" id="utilSewer"> Sewer / Drainage</label>
+      <label><input type="checkbox" id="utilNone"> None Identified</label>
+    </div>
+    <div class="form-group" style="margin-top:14px;">
+      <label>Locate Notes</label>
+      <textarea id="locateNotes" rows="4" class="estimable textarea-field" placeholder="Utility locations, depths, required clearances, special conditions..."></textarea>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 9: FENCE ESTIMATE                                         -->
+<!-- ============================================================ -->
+<section id="tab-estimate" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Estimate</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="generateEstimate()">🔄 Recalculate</button>
+      <button class="btn-outline" onclick="printTab('estimate')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailEstimate()">📧 Email to Customer</button>
+    </div>
+    <div class="date-stamp" id="ds-estimate"></div>
+  </div>
+
+  <div class="form-section" style="background:#F8F8F8;">
+    <div class="form-row" style="font-size:14px;gap:32px;flex-wrap:wrap;">
+      <div><strong>Job #:</strong> <span id="estJobNum">—</span></div>
+      <div><strong>Customer:</strong> <span id="estCustomer">—</span></div>
+      <div><strong>Date:</strong> <span id="estDateDisp">—</span></div>
+      <div><strong>Fence Type:</strong> <span id="estFenceType">—</span></div>
+    </div>
+  </div>
+
+  <div id="estimateContent">
+    <div class="info-box">
+      Fill in Fence Type, Fence Style, and Fence Layout tabs, then click <strong>🔄 Recalculate</strong> to generate the material list.
+    </div>
+  </div>
+
+  <div class="form-section" style="margin-top:16px;">
+    <div class="form-section-title">Additional Charges</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Labour ($)</label>
+        <input type="number" id="estLabour" min="0" step="0.01" placeholder="0.00" onchange="refreshGrandTotal()">
+      </div>
+      <div class="form-group">
+        <label>Delivery Charge ($)</label>
+        <input type="number" id="estDelivery" min="0" step="0.01" placeholder="0.00" onchange="refreshGrandTotal()">
+      </div>
+      <div class="form-group">
+        <label>Miscellaneous ($)</label>
+        <input type="number" id="estMisc" min="0" step="0.01" placeholder="0.00" onchange="refreshGrandTotal()">
+      </div>
+      <div class="form-group">
+        <label>Gate Custom Charges ($)</label>
+        <input type="number" id="estGateCustom" min="0" step="0.01" placeholder="0.00" readonly class="readonly-field">
+      </div>
+    </div>
+  </div>
+
+  <div class="estimate-total" id="grandTotalBox">Grand Total (Before HST): $0.00</div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 10: FENCE CONTRACT                                        -->
+<!-- ============================================================ -->
+<section id="tab-contract" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Contract</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('contract')">🖨️ Print</button>
+      <button class="btn-outline" onclick="emailContract()">📧 Email Contract</button>
+    </div>
+    <div class="date-stamp" id="ds-contract"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Contract Summary</div>
+    <div id="contractSummary">
+      <em style="color:#888;">Convert estimate to contract from the Customer Info tab to populate this section.</em>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Payment Terms</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Deposit % Required</label>
+        <input type="number" id="depositPct" min="0" max="100" step="1" placeholder="50" class="estimable" onchange="calcDeposit()">
+      </div>
+      <div class="form-group">
+        <label>Deposit Amount ($)</label>
+        <input type="number" id="depositAmt" min="0" step="0.01" placeholder="0.00" class="readonly-field" readonly>
+      </div>
+      <div class="form-group">
+        <label>Balance Due</label>
+        <input type="text" id="balanceDue" class="readonly-field" readonly>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Payment Terms</label>
+      <select id="payTerms" class="estimable">
+        <option value="">— Select —</option>
+        <option value="completion">Due on Completion</option>
+        <option value="net30">Net 30 Days</option>
+        <option value="net15">Net 15 Days</option>
+        <option value="5050">50% Deposit / 50% on Completion</option>
+        <option value="custom">Custom Terms</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Special Terms / Notes</label>
+      <textarea id="contractNotes" rows="3" class="estimable textarea-field" placeholder="Additional terms, warranty conditions, special agreements..."></textarea>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Standard Terms &amp; Conditions</div>
+    <div class="terms-text">
+      <p>1. All work shall be performed in a professional and workmanlike manner in accordance with local building codes and applicable standards.</p>
+      <p>2. Customer is responsible for ensuring property lines are properly identified prior to installation.</p>
+      <p>3. Any underground utilities not identified during the locate process that are damaged during installation are the responsibility of the property owner.</p>
+      <p>4. Fence Depot is not responsible for variations in material colour due to manufacturing runs or weathering.</p>
+      <p>5. Workmanship Warranty: One (1) year from date of installation.</p>
+      <p>6. Material warranties are provided by the respective manufacturers.</p>
+      <p>7. Prices quoted are valid for 30 days from estimate date unless otherwise noted.</p>
+      <p>8. HST (Harmonized Sales Tax) is additional on all materials and labour.</p>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Signatures</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Customer Signature Date</label>
+        <input type="date" id="custSigDate" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Authorized By (Fence Depot)</label>
+        <input type="text" id="authBy" class="estimable">
+      </div>
+      <div class="form-group">
+        <label>Authorization Date</label>
+        <input type="date" id="authDate" class="estimable">
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:24px;">
+      <div class="form-group">
+        <label style="border-top:1px solid #333;padding-top:4px;">Customer Signature</label>
+      </div>
+      <div class="form-group">
+        <label style="border-top:1px solid #333;padding-top:4px;">Fence Depot Representative Signature</label>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 11: FENCE INSTALLATION PACKAGE                            -->
+<!-- ============================================================ -->
+<section id="tab-installpkg" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Installation Package</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('installpkg')">🖨️ Print Full Package</button>
+    </div>
+    <div class="date-stamp" id="ds-installpkg"></div>
+  </div>
+
+  <div class="info-box">
+    The installation package compiles all required documents for the field crew. Check which documents to include and print the complete package.
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Package Contents Checklist</div>
+    <div class="pkg-checklist">
+      <label><input type="checkbox" id="pkgCustomer" checked> Customer &amp; Site Information</label>
+      <label><input type="checkbox" id="pkgLayout" checked> Fence Layout &amp; Measurements</label>
+      <label><input type="checkbox" id="pkgMaterials" checked> Materials List</label>
+      <label><input type="checkbox" id="pkgGateDrawings" checked> Gate Shop Drawings</label>
+      <label><input type="checkbox" id="pkgPermit"> Building Permit Copy</label>
+      <label><input type="checkbox" id="pkgLocate" checked> Underground Locate Sheet</label>
+      <label><input type="checkbox" id="pkgInstallNotes" checked> Special Installation Instructions</label>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Installation Package Summary</div>
+    <div id="installPkgSummary" style="font-size:14px;line-height:1.8;"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Additional Field Notes for Crew</div>
+    <textarea id="fieldNotes" rows="6" class="textarea-field" placeholder="Special instructions, safety notes, customer preferences for the installation crew..."></textarea>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- TAB 12: FENCE PARTS CATALOG                                   -->
+<!-- ============================================================ -->
+<section id="tab-catalog" class="tab-section">
+  <div class="tab-header">
+    <h2>Fence Parts Catalog</h2>
+    <div class="tab-actions">
+      <button class="btn-outline" onclick="printTab('catalog')">🖨️ Print</button>
+    </div>
+    <div class="date-stamp" id="ds-catalog"></div>
+  </div>
+
+  <div class="info-box">
+    Reference catalog for chain-link fence components based on Canadian fence standards. Update pricing and inventory details as required.
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Chain-Link Residential – Framework</div>
+    <table class="catalog-table">
+      <thead><tr><th>Item</th><th>Specification</th><th>Unit</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr class="cat-sec"><td colspan="4">Standard Grade</td></tr>
+        <tr><td>Top Rail</td><td>1-1/4" dia. × 10' length</td><td>Each</td><td>Galv or Black</td></tr>
+        <tr><td>Terminal Post</td><td>1-7/8" dia. × (height + 2'6")</td><td>Each</td><td>End / Corner / Gate posts</td></tr>
+        <tr><td>Line Post</td><td>1-1/2" dia. × (height + 2'6")</td><td>Each</td><td>Every 10' between terminals</td></tr>
+        <tr class="cat-sec"><td colspan="4">Upgraded Grade</td></tr>
+        <tr><td>Top Rail</td><td>1-5/8" dia. × 10' length</td><td>Each</td><td>Galv or Black</td></tr>
+        <tr><td>Terminal Post</td><td>2-3/8" dia. × (height + 2'6")</td><td>Each</td><td>End / Corner / Gate posts</td></tr>
+        <tr><td>Line Post</td><td>1-7/8" dia. × (height + 2'6")</td><td>Each</td><td>Every 10' between terminals</td></tr>
+        <tr class="cat-sec"><td colspan="4">Chain-Link Mesh (Canadian Standard – 9 Gauge, 2" Diamond)</td></tr>
+        <tr><td>Mesh 3'</td><td>9 Gauge, 50' roll</td><td>Roll</td><td>Galv or Colour</td></tr>
+        <tr><td>Mesh 4'</td><td>9 Gauge, 50' roll</td><td>Roll</td><td>Galv or Colour</td></tr>
+        <tr><td>Mesh 5'</td><td>9 Gauge, 50' roll</td><td>Roll</td><td>Galv or Colour</td></tr>
+        <tr><td>Mesh 6'</td><td>9 Gauge, 50' roll</td><td>Roll</td><td>Galv or Colour</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Chain-Link Residential – Terminal Post Fittings</div>
+    <table class="catalog-table">
+      <thead><tr><th>Item</th><th>Specification</th><th>Qty Rule</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Main Post Cap</td><td>Matches terminal post dia.</td><td>1 per terminal post (always)</td><td>All post types</td></tr>
+        <tr><td>End Rail Band</td><td>Matches terminal post dia.</td><td>1 per end fitting</td><td>×2 corner, ×3 three-way</td></tr>
+        <tr><td>End Rail Cap</td><td>Matches top rail dia.</td><td>1 per end fitting</td><td>×2 corner, ×3 three-way</td></tr>
+        <tr><td>Tension Bar</td><td>Flat bar – fence height length</td><td>1 per end fitting</td><td>×2 corner, ×3 three-way</td></tr>
+        <tr><td>Tension Bar Bands</td><td>Matches terminal post dia.</td><td>4 for 3' &amp; 4' fence; 5 for 5'; 6 for 6'</td><td>Per end fitting, multiply for corners</td></tr>
+        <tr><td>Fence Bolts (Carriage)</td><td>3/8" × 1-1/4" Galv</td><td>1 per end rail band + 1 per tension bar band</td><td>End and tension bands only</td></tr>
+        <tr><td>Gate Post Fittings</td><td>Same as End Post</td><td>Same as end post</td><td></td></tr>
+        <tr><td>Blank Post</td><td>Main post cap only</td><td>1 cap only</td><td>No other fittings</td></tr>
+        <tr><td>Set of Fittings</td><td>Same as end post minus cap</td><td>As per end post, no cap</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Chain-Link – Gate Hardware</div>
+    <table class="catalog-table">
+      <thead><tr><th>Item</th><th>Specification</th><th>Qty per Gate</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr class="cat-sec"><td colspan="4">Single Gate (Standard 42" wide)</td></tr>
+        <tr><td>Gate Clips</td><td>1-1/4"</td><td>(height − 1) × 2</td><td>Single</td></tr>
+        <tr><td>Tension Bars</td><td>Fence height length</td><td>2 (one per side)</td><td>Single</td></tr>
+        <tr><td>Gate Frame Hinges</td><td>1-1/4"</td><td>2 per gate</td><td>Single</td></tr>
+        <tr><td>Hinge Post Collar</td><td>Matches gate post dia.</td><td>2 per gate</td><td>Single</td></tr>
+        <tr><td>Hinge Bolt</td><td>5/8" × 3" Galv</td><td>2 per gate</td><td>Single</td></tr>
+        <tr><td>Drop Latch</td><td>Matches gate post dia.</td><td>1 per gate</td><td>Single</td></tr>
+        <tr><td>Finger Latch</td><td>1-1/4"</td><td>1 per gate</td><td>Single or Double</td></tr>
+        <tr class="cat-sec"><td colspan="4">Double Gate (Standard 84" wide – additional hardware)</td></tr>
+        <tr><td>Gate Frame Hinges (extra)</td><td>1-1/4"</td><td>+2 per double gate</td><td>Double</td></tr>
+        <tr><td>Drop Latch (centre)</td><td>1-1/4"</td><td>1 per double gate</td><td>Double</td></tr>
+        <tr><td>Drop Pin</td><td>5/8" × 24" Galv</td><td>1 per double gate</td><td>Double</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="form-section">
+    <div class="form-section-title">Suppliers Reference</div>
+    <table class="catalog-table">
+      <thead><tr><th>Fence Type</th><th>Supplier</th><th>Brand / Notes</th></tr></thead>
+      <tbody>
+        <tr><td>Chain-Link Residential</td><td>Standard Chain-Link Distributors</td><td>Canadian Standards</td></tr>
+        <tr><td>Chain-Link Commercial</td><td>Commercial Chain-Link Distributors</td><td>Canadian Standards</td></tr>
+        <tr><td>Wood Fence</td><td>Pressure Treated Lumber Supplier</td><td>PT Lumber</td></tr>
+        <tr><td>PVC Fence</td><td>Homeland Vinyl</td><td>Gorilla Fence Brand</td></tr>
+        <tr><td>Wrought / Rod Iron</td><td>Culture Direct Industries</td><td>—</td></tr>
+        <tr><td>Guiderail</td><td>Arm Tech Industries</td><td>—</td></tr>
+        <tr><td>Highway Fence</td><td>Fence Depot Inventory</td><td>In-house stock</td></tr>
+        <tr><td>Bollards</td><td>Fence Depot Inventory</td><td>In-house stock</td></tr>
+        <tr><td>Gate Operators</td><td>Chamberlain Group</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+</div><!-- /main-content -->
+
+<script src="app.js"></script>
+</body>
+</html>
