@@ -1,0 +1,433 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ProductCategory {
+  CHAIN_LINK_FABRIC
+  LINE_POST
+  TERMINAL_POST
+  GATE_POST
+  TOP_RAIL
+  TENSION_BAR
+  TENSION_BAND
+  BRACE_BAND
+  TIE_WIRE
+  CONCRETE
+  GATE_HARDWARE
+  GATE_FRAME_COMPONENT
+  NON_STOCK
+}
+
+enum UnitOfMeasure {
+  EACH
+  LINEAR_FOOT
+  LINEAR_METRE
+  BAG
+  CUBIC_METRE
+  HOUR
+  DAY
+  LOT
+}
+
+enum EstimateStatus {
+  DRAFT
+  REVIEW
+  SENT
+  ACCEPTED
+  CONTRACTED
+  ARCHIVED
+}
+
+enum InstallationMethod {
+  CONCRETE_FOOTING
+  DRIVEN_POST
+}
+
+enum GateType {
+  SINGLE_SWING
+  DOUBLE_SWING
+}
+
+enum CostComponentType {
+  MATERIAL
+  LABOUR
+  EQUIPMENT
+  NON_STOCK
+  FREIGHT
+  CONTINGENCY
+  TAX
+}
+
+enum PricingMode {
+  MARKUP
+  MARGIN
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum DocumentType {
+  ESTIMATE
+  CONTRACT
+}
+
+enum ContractStatus {
+  OPEN
+  ACTIVE
+  CLOSED
+}
+
+enum SyncDirection {
+  INBOUND
+  OUTBOUND
+}
+
+enum SyncStatus {
+  STAGED
+  READY
+  SENT
+  SUCCEEDED
+  FAILED
+}
+
+model CompanySetting {
+  id                         String   @id @default(cuid())
+  businessName               String
+  addressLine1               String
+  city                       String
+  province                   String
+  postalCode                 String
+  phone                      String
+  email                      String
+  currencyCode               String   @default("CAD")
+  defaultHstRateBasisPoints  Int      @default(1300)
+  defaultLinePostSpacingMm   Int      @default(3048)
+  defaultFabricWasteBasisPts Int      @default(500)
+  defaultTopRailLengthMm     Int      @default(6480)
+  defaultFootingDiameterMm   Int      @default(203)
+  defaultFootingDepthMm      Int      @default(1067)
+  notes                      String?
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+}
+
+model Customer {
+  id           String        @id @default(cuid())
+  displayName  String
+  companyName  String?
+  email        String?
+  phone        String?
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  projectSites ProjectSite[]
+  estimates    Estimate[]
+  contracts    Contract[]
+}
+
+model ProjectSite {
+  id           String     @id @default(cuid())
+  customerId   String
+  siteName     String
+  addressLine1 String
+  city         String
+  province     String
+  postalCode   String
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  customer     Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  estimates    Estimate[]
+  contracts    Contract[]
+}
+
+model Product {
+  id                     String           @id @default(cuid())
+  name                   String
+  category               ProductCategory
+  acePlu                 String?
+  sku                    String?
+  manufacturerPartNumber String?
+  imageUrl               String?
+  description            String?
+  supplier               String?
+  inventoryOnHand        Int              @default(0)
+  inventoryReserved      Int              @default(0)
+  defaultCostCents       Int
+  defaultRetailCents     Int
+  unitOfMeasure          UnitOfMeasure
+  isStock                Boolean          @default(true)
+  createdAt              DateTime         @default(now())
+  updatedAt              DateTime         @updatedAt
+  variants               ProductVariant[]
+}
+
+model ProductVariant {
+  id                       String                @id @default(cuid())
+  productId                String
+  title                    String
+  colour                   String?
+  meshGauge                String?
+  compatiblePipeDiameterMm Int?
+  wallThicknessMm          Int?
+  lengthMm                 Int?
+  heightMm                 Int?
+  inventoryOnHand          Int                   @default(0)
+  inventoryReserved        Int                   @default(0)
+  costCents                Int
+  retailCents              Int
+  unitOfMeasure            UnitOfMeasure
+  isDefault                Boolean               @default(false)
+  createdAt                DateTime              @default(now())
+  updatedAt                DateTime              @updatedAt
+  product                  Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  priceHistory             ProductPriceHistory[]
+  estimateLineItems        EstimateLineItem[]
+}
+
+model ProductPriceHistory {
+  id               String         @id @default(cuid())
+  productVariantId String
+  costCents        Int
+  retailCents      Int
+  effectiveAt      DateTime       @default(now())
+  note             String?
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+}
+
+model LabourRate {
+  id                    String        @id @default(cuid())
+  name                  String
+  description           String?
+  unitOfMeasure         UnitOfMeasure @default(HOUR)
+  rateCents             Int
+  crewSize              Int           @default(1)
+  productivityMmPerHour Int?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+}
+
+model EquipmentRate {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  unitOfMeasure UnitOfMeasure @default(HOUR)
+  rateCents     Int
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model NonStockItem {
+  id               String        @id @default(cuid())
+  name             String
+  description      String?
+  unitOfMeasure    UnitOfMeasure @default(LOT)
+  defaultCostCents Int
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+}
+
+model Estimate {
+  id                    String                 @id @default(cuid())
+  estimateYear          Int
+  estimateSequence      Int
+  estimateNumber        String                 @unique
+  customerId            String
+  projectSiteId         String
+  status                EstimateStatus         @default(DRAFT)
+  currentRevisionId     String?
+  materialTotalCents    Int                    @default(0)
+  labourTotalCents      Int                    @default(0)
+  equipmentTotalCents   Int                    @default(0)
+  nonStockTotalCents    Int                    @default(0)
+  subtotalCents         Int                    @default(0)
+  taxTotalCents         Int                    @default(0)
+  grandTotalCents       Int                    @default(0)
+  notes                 String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  customer              Customer               @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  projectSite           ProjectSite            @relation(fields: [projectSiteId], references: [id], onDelete: Restrict)
+  currentRevision       EstimateRevision?      @relation("CurrentEstimateRevision", fields: [currentRevisionId], references: [id])
+  revisions             EstimateRevision[]
+  approvals             EstimateApproval[]
+  contract              Contract?
+  inventoryReservations InventoryReservation[]
+}
+
+model EstimateRevision {
+  id                    String                  @id @default(cuid())
+  estimateId            String
+  revisionNumber        Int
+  isCurrent             Boolean                 @default(false)
+  overrideReason        String?
+  pricingMode           PricingMode
+  adjustmentBasisPoints Int
+  taxBasisPoints        Int
+  inputSnapshotJson     String
+  outputSnapshotJson    String
+  materialTotalCents    Int
+  labourTotalCents      Int
+  equipmentTotalCents   Int
+  nonStockTotalCents    Int
+  subtotalCents         Int
+  taxTotalCents         Int
+  grandTotalCents       Int
+  createdAt             DateTime                @default(now())
+  estimate              Estimate                @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+  estimateRuns          EstimateRun[]
+  gates                 EstimateGate[]
+  lineItems             EstimateLineItem[]
+  costComponents        EstimateCostComponent[]
+  contracts             Contract[]
+  currentForEstimate    Estimate[]              @relation("CurrentEstimateRevision")
+
+  @@unique([estimateId, revisionNumber])
+}
+
+model EstimateRun {
+  id                   String             @id @default(cuid())
+  revisionId           String
+  name                 String
+  lengthMm             Int
+  heightMm             Int
+  endTerminalPosts     Int
+  cornerTerminalPosts  Int
+  linePostSpacingMm    Int
+  topRailStockLengthMm Int
+  fabricWasteBasisPts  Int
+  installationMethod   InstallationMethod
+  footingDiameterMm    Int
+  footingDepthMm       Int
+  revision             EstimateRevision   @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+}
+
+model EstimateGate {
+  id              String           @id @default(cuid())
+  revisionId      String
+  name            String
+  gateType        GateType
+  widthMm         Int
+  heightMm        Int
+  quantity        Int
+  includeFrameKit Boolean          @default(true)
+  overrideReason  String?
+  revision        EstimateRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+}
+
+model EstimateLineItem {
+  id                 String           @id @default(cuid())
+  revisionId         String
+  productId          String?
+  productVariantId   String?
+  code               String
+  section            String
+  name               String
+  description        String?
+  quantity           Decimal          @db.Decimal(12, 2)
+  unitOfMeasure      UnitOfMeasure
+  unitCostCents      Int
+  unitPriceCents     Int
+  extendedCostCents  Int
+  extendedPriceCents Int
+  overrideReason     String?
+  sortOrder          Int
+  revision           EstimateRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  productVariant     ProductVariant?  @relation(fields: [productVariantId], references: [id], onDelete: SetNull)
+
+  @@index([revisionId, section, sortOrder])
+}
+
+model EstimateCostComponent {
+  id              String            @id @default(cuid())
+  revisionId      String
+  componentType   CostComponentType
+  name            String
+  quantity        Decimal           @db.Decimal(12, 2)
+  unitOfMeasure   UnitOfMeasure
+  unitCostCents   Int
+  totalCostCents  Int
+  totalPriceCents Int
+  notes           String?
+  revision        EstimateRevision  @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+}
+
+model EstimateApproval {
+  id              String         @id @default(cuid())
+  estimateId      String
+  approvedByName  String
+  approvedByEmail String?
+  notes           String?
+  approvalStatus  ApprovalStatus @default(PENDING)
+  approvedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  estimate        Estimate       @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+}
+
+model Contract {
+  id               String           @id @default(cuid())
+  contractYear     Int
+  contractSequence Int
+  contractNumber   String           @unique
+  estimateId       String           @unique
+  sourceRevisionId String
+  customerId       String
+  projectSiteId    String
+  status           ContractStatus   @default(OPEN)
+  totalCents       Int
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  estimate         Estimate         @relation(fields: [estimateId], references: [id], onDelete: Restrict)
+  sourceRevision   EstimateRevision @relation(fields: [sourceRevisionId], references: [id], onDelete: Restrict)
+  customer         Customer         @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  projectSite      ProjectSite      @relation(fields: [projectSiteId], references: [id], onDelete: Restrict)
+}
+
+model DocumentSequence {
+  id           String       @id @default(cuid())
+  documentType DocumentType
+  year         Int
+  currentValue Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([documentType, year])
+}
+
+model InventoryReservation {
+  id          String     @id @default(cuid())
+  estimateId  String
+  status      SyncStatus @default(STAGED)
+  payloadJson String
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  estimate    Estimate   @relation(fields: [estimateId], references: [id], onDelete: Cascade)
+}
+
+model AceSyncLog {
+  id              String        @id @default(cuid())
+  direction       SyncDirection
+  status          SyncStatus
+  externalKey     String?
+  payloadJson     String
+  responseSummary String?
+  createdAt       DateTime      @default(now())
+}
+
+model AceSyncStagingRecord {
+  id             String     @id @default(cuid())
+  sourceKey      String     @unique
+  status         SyncStatus @default(STAGED)
+  rawPayloadJson String
+  normalizedJson String?
+  processedAt    DateTime?
+  createdAt      DateTime   @default(now())
+}
