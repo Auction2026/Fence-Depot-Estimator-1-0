@@ -17,6 +17,13 @@ const steps = [
   "Summary",
 ];
 
+function splitMm(mm: number) {
+  const totalInches = mm / 25.4;
+  const feet = Math.floor(totalInches / 12);
+  const inches = Math.round(totalInches - feet * 12);
+  return { feet, inches };
+}
+
 type Props = {
   companyName: string;
   variants: CatalogVariant[];
@@ -115,21 +122,26 @@ export function EstimatorWizard({ companyName, variants, rateCard, defaults }: P
     setIsSaving(true);
     setSaveError(null);
 
-    const response = await fetch("/api/estimates", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const response = await fetch("/api/estimates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    if (!response.ok) {
-      const payload = (await response.json()) as { error?: string };
-      setSaveError(payload.error ?? "Could not save estimate.");
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string };
+        setSaveError(payload.error ?? "Could not save estimate.");
+        setIsSaving(false);
+        return;
+      }
+
+      const payload = (await response.json()) as { id: string };
+      router.push(`/estimates/${payload.id}`);
+    } catch {
+      setSaveError("Could not save estimate. Please try again.");
       setIsSaving(false);
-      return;
     }
-
-    const payload = (await response.json()) as { id: string };
-    router.push(`/estimates/${payload.id}`);
   }
 
   return (
@@ -195,11 +207,19 @@ export function EstimatorWizard({ companyName, variants, rateCard, defaults }: P
               <label className="space-y-2 text-sm font-medium">Run name
                 <input className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={run.name} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, name: event.target.value } : entry) })} />
               </label>
-              <label className="space-y-2 text-sm font-medium">Length (mm)
-                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={run.lengthMm} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, lengthMm: Number(event.target.value) } : entry) })} />
+              <label className="space-y-2 text-sm font-medium">Length (ft / in)
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(run.lengthMm).feet} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, lengthMm: feetAndInchesToMm(Number(event.target.value), splitMm(run.lengthMm).inches) } : entry) })} />
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(run.lengthMm).inches} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, lengthMm: feetAndInchesToMm(splitMm(run.lengthMm).feet, Number(event.target.value)) } : entry) })} />
+                </div>
+                <span className="text-xs text-zinc-500">Canonical: {run.lengthMm} mm</span>
               </label>
-              <label className="space-y-2 text-sm font-medium">Height (mm)
-                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={run.heightMm} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, heightMm: Number(event.target.value) } : entry) })} />
+              <label className="space-y-2 text-sm font-medium">Height (ft / in)
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(run.heightMm).feet} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, heightMm: feetAndInchesToMm(Number(event.target.value), splitMm(run.heightMm).inches) } : entry) })} />
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(run.heightMm).inches} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, heightMm: feetAndInchesToMm(splitMm(run.heightMm).feet, Number(event.target.value)) } : entry) })} />
+                </div>
+                <span className="text-xs text-zinc-500">Canonical: {run.heightMm} mm</span>
               </label>
               <label className="space-y-2 text-sm font-medium">End terminals
                 <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={run.endTerminalPosts} onChange={(event) => setForm({ ...form, runs: form.runs.map((entry, runIndex) => runIndex === index ? { ...entry, endTerminalPosts: Number(event.target.value) } : entry) })} />
@@ -212,8 +232,12 @@ export function EstimatorWizard({ companyName, variants, rateCard, defaults }: P
           ))}
 
           <div className="grid gap-4 md:grid-cols-3">
-            <label className="space-y-2 text-sm font-medium">Line post spacing (mm)
-              <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={form.configuration.linePostSpacingMm} onChange={(event) => setForm({ ...form, configuration: { ...form.configuration, linePostSpacingMm: Number(event.target.value) } })} />
+            <label className="space-y-2 text-sm font-medium">Line post spacing (ft / in)
+              <div className="grid grid-cols-2 gap-2">
+                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(form.configuration.linePostSpacingMm).feet} onChange={(event) => setForm({ ...form, configuration: { ...form.configuration, linePostSpacingMm: feetAndInchesToMm(Number(event.target.value), splitMm(form.configuration.linePostSpacingMm).inches) } })} />
+                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(form.configuration.linePostSpacingMm).inches} onChange={(event) => setForm({ ...form, configuration: { ...form.configuration, linePostSpacingMm: feetAndInchesToMm(splitMm(form.configuration.linePostSpacingMm).feet, Number(event.target.value)) } })} />
+              </div>
+              <span className="text-xs text-zinc-500">Canonical: {form.configuration.linePostSpacingMm} mm</span>
             </label>
             <label className="space-y-2 text-sm font-medium">Fabric waste (%)
               <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={form.configuration.fabricWasteBasisPoints / 100} onChange={(event) => setForm({ ...form, configuration: { ...form.configuration, fabricWasteBasisPoints: Number(event.target.value) * 100 } })} />
@@ -253,7 +277,7 @@ export function EstimatorWizard({ companyName, variants, rateCard, defaults }: P
               </select>
             </label>
             <label className="space-y-2 text-sm font-medium">Top rail length
-              <select className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={String(selectedTopRail?.lengthMm ?? "")} onChange={(event) => { const lengthMm = Number(event.target.value); setSelection("topRail", updateVariantByFilters(variants, "topRail", form.selections.topRail, { colour: selectedTopRail?.colour ?? "", length: String(lengthMm), thickness: String(selectedTopRail?.wallThicknessMm ?? ""), diameter: String(selectedTopRail?.compatiblePipeDiameterMm ?? "") })); setForm({ ...form, configuration: { ...form.configuration, topRailStockLengthMm: lengthMm } }); }}>
+              <select className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={String(selectedTopRail?.lengthMm ?? "")} onChange={(event) => { const lengthMm = Number(event.target.value); setForm((current) => ({ ...current, selections: { ...current.selections, topRail: updateVariantByFilters(variants, "topRail", current.selections.topRail, { colour: selectedTopRail?.colour ?? "", length: String(lengthMm), thickness: String(selectedTopRail?.wallThicknessMm ?? ""), diameter: String(selectedTopRail?.compatiblePipeDiameterMm ?? "") }) }, configuration: { ...current.configuration, topRailStockLengthMm: lengthMm } })); }}>
                 {distinct(topRailVariants.map((variant) => String(variant.lengthMm))).map((value) => <option key={value} value={value}>{value} mm</option>)}
               </select>
             </label>
@@ -278,11 +302,19 @@ export function EstimatorWizard({ companyName, variants, rateCard, defaults }: P
               <label className="space-y-2 text-sm font-medium">Quantity
                 <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={gate.quantity} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, quantity: Number(event.target.value) } : entry) })} />
               </label>
-              <label className="space-y-2 text-sm font-medium">Width (mm)
-                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={gate.widthMm} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, widthMm: Number(event.target.value) } : entry) })} />
+              <label className="space-y-2 text-sm font-medium">Width (ft / in)
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(gate.widthMm).feet} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, widthMm: feetAndInchesToMm(Number(event.target.value), splitMm(gate.widthMm).inches) } : entry) })} />
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(gate.widthMm).inches} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, widthMm: feetAndInchesToMm(splitMm(gate.widthMm).feet, Number(event.target.value)) } : entry) })} />
+                </div>
+                <span className="text-xs text-zinc-500">Canonical: {gate.widthMm} mm</span>
               </label>
-              <label className="space-y-2 text-sm font-medium">Height (mm)
-                <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={gate.heightMm} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, heightMm: Number(event.target.value) } : entry) })} />
+              <label className="space-y-2 text-sm font-medium">Height (ft / in)
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(gate.heightMm).feet} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, heightMm: feetAndInchesToMm(Number(event.target.value), splitMm(gate.heightMm).inches) } : entry) })} />
+                  <input type="number" className="w-full rounded-lg border border-zinc-300 px-3 py-2" value={splitMm(gate.heightMm).inches} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, heightMm: feetAndInchesToMm(splitMm(gate.heightMm).feet, Number(event.target.value)) } : entry) })} />
+                </div>
+                <span className="text-xs text-zinc-500">Canonical: {gate.heightMm} mm</span>
               </label>
               <label className="flex items-center gap-3 pt-8 text-sm font-medium"><input type="checkbox" checked={gate.includeFrameKit} onChange={(event) => setForm({ ...form, gates: form.gates.map((entry, gateIndex) => gateIndex === index ? { ...entry, includeFrameKit: event.target.checked } : entry) })} /> Include gate frame kit</label>
             </div>

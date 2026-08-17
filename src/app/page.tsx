@@ -38,7 +38,7 @@ export default async function HomePage() {
           <div className="mt-6 overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500"><th className="py-2">Estimate</th><th className="py-2">Customer</th><th className="py-2">Status</th><th className="py-2">Amount</th><th className="py-2"></th></tr>
+                <tr className="border-b border-zinc-200 text-left text-zinc-500"><th className="py-2">Estimate</th><th className="py-2">Customer</th><th className="py-2">Status</th><th className="py-2">Materials</th><th className="py-2">Labour</th><th className="py-2">Amount</th><th className="py-2"></th></tr>
               </thead>
               <tbody>
                 {estimates.map((estimate) => (
@@ -46,6 +46,8 @@ export default async function HomePage() {
                     <td className="py-3">{estimate.estimateNumber}</td>
                     <td className="py-3">{estimate.customer.displayName}</td>
                     <td className="py-3">{estimate.status}</td>
+                    <td className="py-3">{money.format(BigInt(estimate.materialTotalCents))}</td>
+                    <td className="py-3">{money.format(BigInt(estimate.labourTotalCents))}</td>
                     <td className="py-3">{money.format(BigInt(estimate.grandTotalCents))}</td>
                     <td className="py-3 text-right"><Link href={`/estimates/${estimate.id}`} className="font-medium text-emerald-700">Open</Link></td>
                   </tr>

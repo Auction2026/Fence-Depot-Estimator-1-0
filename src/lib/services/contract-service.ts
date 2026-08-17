@@ -1,4 +1,4 @@
-import { ApprovalStatus, ContractStatus, EstimateStatus } from "@prisma/client";
+import { ApprovalStatus, ContractStatus, DocumentType, EstimateStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { nextDocumentNumber } from "@/lib/services/numbering";
 
@@ -17,7 +17,7 @@ export async function acceptEstimateToContract(estimateId: string, approvedByNam
       return estimate.contract;
     }
 
-    const numbering = await nextDocumentNumber(tx, "CONTRACT");
+    const numbering = await nextDocumentNumber(tx, DocumentType.CONTRACT);
 
     await tx.estimateApproval.create({
       data: {

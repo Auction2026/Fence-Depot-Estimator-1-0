@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { fenceDepotProfile } from "@/lib/demo";
 import { type CatalogVariant, type RateCard, type SelectionCategory } from "@/lib/domain/types";
 
-const categoryMap: Record<ProductCategory, SelectionCategory> = {
+const categoryMap: Partial<Record<ProductCategory, SelectionCategory>> = {
   CHAIN_LINK_FABRIC: "fabric",
   LINE_POST: "linePost",
   TERMINAL_POST: "terminalPost",
@@ -16,7 +16,6 @@ const categoryMap: Record<ProductCategory, SelectionCategory> = {
   CONCRETE: "concrete",
   GATE_HARDWARE: "gateHardware",
   GATE_FRAME_COMPONENT: "gateFrame",
-  NON_STOCK: "gateFrame"
 };
 
 export async function getCompanySettings() {
@@ -39,23 +38,25 @@ export async function getCatalogVariants(): Promise<CatalogVariant[]> {
     orderBy: [{ product: { category: "asc" } }, { title: "asc" }],
   });
 
-  return variants.map((variant) => ({
-    id: variant.id,
-    productId: variant.productId,
-    productName: variant.product.name,
-    category: categoryMap[variant.product.category],
-    title: variant.title,
-    description: variant.product.description,
-    colour: variant.colour,
-    meshGauge: variant.meshGauge,
-    compatiblePipeDiameterMm: variant.compatiblePipeDiameterMm,
-    wallThicknessMm: variant.wallThicknessMm,
-    lengthMm: variant.lengthMm,
-    heightMm: variant.heightMm,
-    unitOfMeasure: variant.unitOfMeasure,
-    costCents: variant.costCents,
-    retailCents: variant.retailCents,
-  }));
+  return variants
+    .filter((variant) => variant.product.category !== ProductCategory.NON_STOCK)
+    .map((variant) => ({
+      id: variant.id,
+      productId: variant.productId,
+      productName: variant.product.name,
+      category: categoryMap[variant.product.category] as SelectionCategory,
+      title: variant.title,
+      description: variant.product.description,
+      colour: variant.colour,
+      meshGauge: variant.meshGauge,
+      compatiblePipeDiameterMm: variant.compatiblePipeDiameterMm,
+      wallThicknessMm: variant.wallThicknessMm,
+      lengthMm: variant.lengthMm,
+      heightMm: variant.heightMm,
+      unitOfMeasure: variant.unitOfMeasure,
+      costCents: variant.costCents,
+      retailCents: variant.retailCents,
+    }));
 }
 
 export async function getRateCard(): Promise<RateCard> {

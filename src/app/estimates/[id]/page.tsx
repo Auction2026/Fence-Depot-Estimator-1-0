@@ -3,13 +3,13 @@ import { notFound } from "next/navigation";
 import { AcceptEstimateButton } from "@/components/estimator/AcceptEstimateButton";
 import { money } from "@/lib/money";
 import { formatImperialFromMm } from "@/lib/units";
-import { getEstimateById } from "@/lib/services/reference-data";
+import { getCompanySettings, getEstimateById } from "@/lib/services/reference-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function EstimateDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const estimate = await getEstimateById(id);
+  const [estimate, company] = await Promise.all([getEstimateById(id), getCompanySettings()]);
 
   if (!estimate || !estimate.currentRevision) {
     notFound();
@@ -32,7 +32,11 @@ export default async function EstimateDetailPage({ params }: { params: Promise<{
           {estimate.contract ? (
             <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-900">Contract created: <strong>{estimate.contract.contractNumber}</strong></div>
           ) : (
-            <AcceptEstimateButton estimateId={estimate.id} />
+            <AcceptEstimateButton
+              estimateId={estimate.id}
+              defaultApprovedByName={`${company.businessName} office`}
+              defaultApprovedByEmail={company.email}
+            />
           )}
           <Link href="/estimates/new" className="block rounded-lg border border-zinc-300 px-4 py-2 text-center text-sm font-medium">Create another estimate</Link>
         </div>

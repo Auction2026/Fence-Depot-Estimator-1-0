@@ -9,6 +9,8 @@ import {
   type SelectionCategory,
 } from "@/lib/domain/types";
 
+const CONCRETE_M3_PER_30KG_BAG = 0.014;
+
 function requireVariant(variants: CatalogVariant[], category: SelectionCategory, id: string) {
   const variant = variants.find((entry) => entry.id === id && entry.category === category);
   if (!variant) {
@@ -172,7 +174,7 @@ export function calculateChainLinkEstimate(
         selected.concrete,
         "concrete",
         "Installation",
-        Math.ceil(concreteVolumeCubicMetres / 0.014),
+        Math.ceil(concreteVolumeCubicMetres / CONCRETE_M3_PER_30KG_BAG),
         input.overrides?.concrete,
       ),
     );

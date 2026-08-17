@@ -1,4 +1,11 @@
-import { ApprovalStatus, CostComponentType, EstimateStatus, Prisma, UnitOfMeasure } from "@prisma/client";
+import {
+  ApprovalStatus,
+  CostComponentType,
+  DocumentType,
+  EstimateStatus,
+  Prisma,
+  UnitOfMeasure,
+} from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { calculateChainLinkEstimate } from "@/lib/domain/chain-link";
 import { type EstimateInput } from "@/lib/domain/types";
@@ -12,7 +19,7 @@ export async function createEstimate(input: EstimateInput) {
   const calculated = calculateChainLinkEstimate(parsed, variants, rateCard);
 
   return prisma.$transaction(async (tx) => {
-    const numbering = await nextDocumentNumber(tx, "ESTIMATE");
+    const numbering = await nextDocumentNumber(tx, DocumentType.ESTIMATE);
 
     const customer = await tx.customer.create({
       data: {
